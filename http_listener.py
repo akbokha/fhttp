@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import re
-from base64 import b64decode
 from scapy.all import sniff
 
 dev = "enp0s3"
