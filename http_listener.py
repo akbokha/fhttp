@@ -10,7 +10,7 @@ def handle_packet(packet):
     tcp = packet.getlayer("TCP")
     match = re.search(r"Cookie: (.+)", str(tcp.payload))
     if match:
-        print match.group(1)
+        print(match.group(1))
 
 
 sniff(
