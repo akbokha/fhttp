@@ -49,7 +49,6 @@ class HttpListener(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
-        print("sssssss")
         sniff(
             iface=self.network_interface,
             store=0,
