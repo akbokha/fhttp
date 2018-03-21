@@ -1,10 +1,15 @@
-import threading as thr
 import arp_spoof
 import http_listener
 
-if __name__ == '__main__':
-    arp = thr.Thread(target=arp_spoof.main())
-    http_l = thr.Thread(target=http_listener.main())
+
+def main():
+    arp = arp_spoof.ArpSpoof()
+    http_l = http_listener.HttpListener()
     arp.start()
     http_l.start()
-    arp.join(); http_listener.join()
+    arp.join()
+    http_l.join()
+
+
+if __name__ == '__main__':
+    main()
