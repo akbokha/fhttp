@@ -17,24 +17,24 @@ media_dir = script_dir + os.path.sep + 'media'
 __authors__ = "\n".join(['Abdel K. Bokharouss',
                          'Adriaan Knapen'])
 
+
 class Main(QMainWindow):
 
-
     def __init__(self):
-        super().__init__()
+        super(Main, self).__init__()
         self.initUI()
         self.initMenu()
-
 
     def initUI(self):
         screen = app.primaryScreen()
         screen_size = screen.size()
-        width = screen_size.width() / 2; height = screen_size.height() / 2
-        x_start = screen_size.width() / 4; y_start = screen_size.height() / 4
+        width = screen_size.width() / 2
+        height = screen_size.height() / 2
+        x_start = screen_size.width() / 4
+        y_start = screen_size.height() / 4
         self.setGeometry(x_start, y_start, width, height)
         self.setWindowTitle('fhttp')
         self.setWindowIcon(QIcon(media_dir + os.path.sep + 'fhttp_logo.png'))
-
 
     def initMenu(self):
         main_bar = self.menuBar()
@@ -50,13 +50,11 @@ class Main(QMainWindow):
         supportAction.triggered.connect(self.SupportDocumentationCall)
         help_menu.addAction(supportAction)
 
-
     def aboutCall(self):
         QMessageBox.about(self, "About", "Lorem ipsum dolor sit amet, "
                                          "consectetur adipiscing elit,"
                                          " sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \n\n"
                                          "Abdel K. Bokharouss and Adriaan Knapen \n")
-
 
     def SupportDocumentationCall(self):
         webbrowser.open('https://github.com/akbokha/fhttp')

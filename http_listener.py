@@ -35,7 +35,7 @@ def handle_packet(packet):
         else:
             target_dst = ip_to_mac[packet[IP].dst]
 
-            # Ignore packets target towards ourself or already correctly targeted packets, since either we generated
+            # Ignore packets target towards our self or already correctly targeted packets, since either we generated
             # them or they are legitimate packets originating from our own host.
             if packet[IP].dst not in attacker_ips and target_dst != packet.dst:
                 print('redirecting a packet from %s (%s) to %s' % (packet.dst, packet[IP].dst, target_dst))
