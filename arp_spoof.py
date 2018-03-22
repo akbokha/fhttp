@@ -1,11 +1,9 @@
 # script for ARP spoofing
 # written by Abdel K. Bokharouss and Adriaan Knapen
-from __future__ import absolute_import, division, print_function
 import threading
 from time import sleep
 
 import scapy.config
-import scapy.layers.l2
 import scapy.route
 from scapy.all import *
 from scapy.layers.l2 import ARP, Ether
