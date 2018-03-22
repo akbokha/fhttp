@@ -10,6 +10,7 @@ import arp_spoof
 import http_listener
 from Tkinter import *
 import tkMessageBox
+import tkFont as tkfont
 
 __authors__ = "\n".join(['Abdel K. Bokharouss',
                          'Adriaan Knapen'])
@@ -19,19 +20,44 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 media_dir = script_dir + os.path.sep + 'media'
 
 
-class MainApplication(Frame):
+class MainApplication(Tk):
 
-    def __init__(self, parent):
-        Frame.__init__(self, parent)
-        self.parent = parent
-        parent.title('fhttp')
-        self.close_button = Button(parent, text="Close", command=parent.quit)
-        self.close_button.pack()
+    def __init__(self):
+        Tk.__init__(self)
+        self.title_font = tkfont.Font(family='Helvetica', size=15, weight='bold', slant='italic')
+        self.h2_font = tkfont.Font(family='Helvetica', size=13, weight='bold')
+
+        width = self.winfo_screenwidth() / 2
+        height = self.winfo_screenheight() / 2
+        x_start = self.winfo_screenwidth() / 4
+        y_start = self.winfo_screenheight() / 4
+        self.geometry('%dx%d+%d+%d' % (width, height, x_start, y_start))
+        self.resizable(0, 0)  # do not feel like dealing with resizable frames
+
+        img_icon = PhotoImage(file=media_dir + os.path.sep + 'fhttp_logo.ico')
+        self.tk.call('wm', 'iconphoto', self._w, img_icon)
+
+        container = Frame(self)
+        container.pack(side='top', fill='both', expand=True)
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
         self.conf_menu_bar()
 
-    def conf_menu_bar(self):
-        menu_bar = Menu(self.parent)
+        # pages of the application
+        self.frames = {}
+        for page in (WelcomePage, StartScanPage):
+            page_name = page.__name__
+            frame = page(parent=container, controller=self)
+            self.frames[page_name] = frame
+            frame.grid(row=0, column=0, sticky="nsew")
+        self.show_frame('WelcomePage')
 
+    def show_frame(self, page_name):
+        frame = self.frames[page_name]
+        frame.tkraise()
+
+    def conf_menu_bar(self):
+        menu_bar = Menu(self)
         # help menu
         help_menu = Menu(menu_bar, tearoff=0)
         help_menu.add_command(label='About', command=self.display_about)
@@ -39,8 +65,8 @@ class MainApplication(Frame):
         # help_menu.add_separator()
         menu_bar.add_cascade(label='Help', menu=help_menu)
 
-        menu_bar.add_command(label='Exit', command=self.parent.quit)
-        self.parent.config(menu=menu_bar)
+        menu_bar.add_command(label='Exit', command=self.quit)
+        self.config(menu=menu_bar)
 
     @staticmethod
     def display_about():
@@ -52,6 +78,36 @@ class MainApplication(Frame):
     @staticmethod
     def display_support_doc():
         webbrowser.open('https://github.com/akbokha/fhttp')
+
+
+class WelcomePage(Frame):
+
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
+        self.controller = controller
+
+        # welcome text start page
+        label_welcome = Label(self, text='Welcome to fhttp\n'
+                                         'We inherently trust no one, including each other',
+                              font=controller.title_font)
+        label_welcome.pack(side='top', pady=20)
+
+        # Let's start
+        button = Button(self, text="Start exploring (and exploiting)",
+                           command=lambda: controller.show_frame("StartScanPage"))
+        button.pack()
+
+
+class StartScanPage(Frame):
+
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
+        self.controller = controller
+        label_scan = Label(self, text='Let\'s check who (and what) is connected to our local network',
+                              font=controller.h2_font)
+        label_scan.pack(side='top', pady=20)
+        button_scan = Button(self, text="Scan local network")
+        button_scan.pack()
 
 
 def main():
@@ -66,23 +122,8 @@ def main():
 
 
 def init_gui():
-    root = Tk()
-    # frame size
-    width = root.winfo_screenwidth() / 2
-    height = root.winfo_screenheight() / 2
-    x_start = root.winfo_screenwidth() / 4
-    y_start = root.winfo_screenheight() / 4
-    root.geometry('%dx%d+%d+%d' % (width, height, x_start, y_start))
-
-    # init main application
-    MainApplication(root).pack(side='top', fill='both', expand=True,)
-
-    # set frame icon
-    img_icon = PhotoImage(file=media_dir + os.path.sep + 'fhttp_logo.ico')
-    root.tk.call('wm', 'iconphoto', root._w, img_icon)
-
-    # has to be replace with update_idletasks() + update()
-    root.mainloop()
+    main_app = MainApplication()
+    main_app.mainloop()
 
 
 if __name__ == '__main__':
