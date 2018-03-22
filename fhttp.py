@@ -19,6 +19,8 @@ __authors__ = "\n".join(['Abdel K. Bokharouss',
 script_dir = os.path.dirname(os.path.realpath(__file__))
 media_dir = script_dir + os.path.sep + 'media'
 
+threads = []
+
 
 class MainApplication(Tk):
 
@@ -45,7 +47,7 @@ class MainApplication(Tk):
 
         # pages of the application
         self.frames = {}
-        for page in (WelcomePage, StartScanPage):
+        for page in (WelcomePage, StartScanPage, ManualInputPage):
             page_name = page.__name__
             frame = page(parent=container, controller=self)
             self.frames[page_name] = frame
@@ -92,10 +94,12 @@ class WelcomePage(Frame):
                               font=controller.title_font)
         label_welcome.pack(side='top', pady=20)
 
-        # Let's start
-        button = Button(self, text="Start exploring (and exploiting)",
+        button_scan = Button(self, text="Start exploring the local network",
                            command=lambda: controller.show_frame("StartScanPage"))
-        button.pack()
+        button_scan.pack()
+        button_manual = Button(self, text="Set victim and target manually",
+                        command=lambda: controller.show_frame("ManualInputPage"))
+        button_manual.pack()
 
 
 class StartScanPage(Frame):
@@ -108,6 +112,30 @@ class StartScanPage(Frame):
         label_scan.pack(side='top', pady=20)
         button_scan = Button(self, text="Scan local network")
         button_scan.pack()
+
+class ManualInputPage(Frame):
+
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
+        self.controller = controller
+        self.parent = parent
+        label = Label(self, text='Identify the target and victim who need to be spoofed',
+                               font=controller.h2_font)
+        label.pack(side='top', pady=20)
+        label_ip_victim = Label(self, text='Victim IP Address: ').pack()
+        entry_ip_victim = Entry(self)
+        entry_ip_victim.pack()
+        label_ip_target = Label(self, text='Target IP Address: ').pack()
+        entry_ip_target = Entry(self)
+        entry_ip_target.pack()
+
+        button_start_ARP = Button(self, text="Start ARP Spoofing",
+                                  command=lambda:self.start_spoofing(entry_ip_victim.get(), entry_ip_target.get()))
+        button_start_ARP.pack()
+
+    def start_spoofing(self, vIP, tIP):
+        arp = arp_spoof.ArpSpoof(vIP, tIP)
+        arp.start()
 
 
 def main():
