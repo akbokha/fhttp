@@ -83,7 +83,7 @@ class ArpSpoof(threading.Thread):
             Ether() / ARP(op="who-has", hwsrc=self.host_mac, psrc=self.vIP, pdst=self.tIP)])
 
     def run(self):
-        self.fill_arp()
+        # self.scan_local_network()
         while True:
             self.spoof_arp()
             sleep(10)
