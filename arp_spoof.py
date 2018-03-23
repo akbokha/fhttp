@@ -5,8 +5,6 @@ from time import sleep
 
 from ip_to_mac import IPtoMACDict
 from network_discoverer import NetworkDiscoverer
-import scapy.config
-import scapy.route
 from scapy.all import *
 from scapy.layers.l2 import ARP, Ether
 

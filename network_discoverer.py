@@ -1,31 +1,31 @@
 from ip_to_mac import IPtoMACDict
+
 import scapy.config
 import scapy.route
 from scapy.all import *
-from scapy.layers.l2 import ARP, Ether
+import scapy.layers.l2
 
 
 class NetworkDiscoverer:
-
     local_host = '127.0.0.1'
     non_routable = '0.0.0.0'
     def_mask = 0xFFFFFFFF
 
     def __init__(self):
-        self.host_mac = self.ip_address = None
+        self.host_mac = self.ip_address = self.ip_to_mac_record = None
         try:
             self.host_mac = self.get_own_mac_address()
         except Exception as e:
             print(e)
             sys.exit(1)
         self.ip_address = self.get_own_ip_address()
-        self.ip_to_mac_record = None
 
     """
     Return own mac_addresss
     @rtype: str
     @return: mac address
     """
+
     def get_own_mac_address(self, update=False):
         if self.host_mac is not None and not update:
             return self.host_mac
@@ -40,30 +40,31 @@ class NetworkDiscoverer:
     @rtype: str
     @return: ip address
     """
-    def get_own_ip_address(self):
-        if self.ip_address is not None:
+
+    def get_own_ip_address(self, update=False):
+        if self.ip_address is not None and not update:
             return self.ip_address
-        self.ip_address = socket.gethostbyname(socket.gethostname())
-        return self.ip_address
+        return socket.gethostbyname(socket.gethostname())
 
     def get_ip_to_mac_mapping(self, new_scan=False):
-        if new_scan or self.ip_to_mac_record is None:
-            self.ip_to_mac_record = self.scan_local_network()
-        else:
+        if self.ip_to_mac_record is not None and not new_scan:
             return self.ip_to_mac_record
+        else:
+            return self.scan_local_network()
 
     """
     courtesy of the script shared by Benedikt Waldvogel at stackOverFlow: 
     https://stackoverflow.com/questions/207234/list-of-ip-addresses-hostnames-from-local-network-in-python/
     """
+
     def to_CIDR_notation(self, network_bytes, netmask_bytes):
         network = scapy.utils.ltoa(network_bytes)
         netmask = 32 - int(round(math.log(self.def_mask - netmask_bytes, 2)))
         return "%s/%s" % (network, netmask)
 
     def scan_local_network(self):
+        ip_mac_pairs = {}
         for network, netmask, NA, iface, address in scapy.config.conf.route.routes:
-            ip_mac_pairs = {}
             if network == 0 or iface == 'lo' or address == self.local_host or address == self.non_routable:
                 continue  # skip default gateway and loop-back network
             if netmask == self.def_mask or netmask <= 0:
@@ -73,7 +74,7 @@ class NetworkDiscoverer:
                 continue  # scapy does not support arp-ing on non-primary network interfaces
             if net:
                 try:
-                    ans, unans = scapy.layers.l2.arping(net, iface=iface, timeout=1, verbose=True)
+                    ans, unans = scapy.layers.l2.arping(net, iface=iface, timeout=1, verbose=False)
                     for s, r in ans.res:
                         try:
                             ip_mac_pairs[r.psrc] = r.hwsrc
@@ -84,6 +85,5 @@ class NetworkDiscoverer:
                         print('no permission - did you run it with root permissions?')
                     else:
                         raise  # other error type
-
             self.ip_to_mac_record = IPtoMACDict(ip_mac_pairs)
             return self.ip_to_mac_record

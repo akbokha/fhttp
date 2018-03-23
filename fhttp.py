@@ -143,10 +143,9 @@ class ManualInputPage(Frame):
 
 def main():
     network_discoverer = NetworkDiscoverer()
-    test_mac = network_discoverer.get_own_mac_address()
-    print("mac: ", test_mac)
-    test_ip = network_discoverer.get_own_ip_address()
-    print("ip: ", test_ip)
+    test_ip_mac_pair = network_discoverer.get_ip_to_mac_mapping().get_ip_to_mac_dict()
+    for k in test_ip_mac_pair:
+        print("ip: ", k, " and mac: ", test_ip_mac_pair[k])
     # init_gui(network_discoverer)
 
 
