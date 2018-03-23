@@ -11,7 +11,7 @@ import tkMessageBox
 import tkFont as tkfont
 
 import arp_spoof
-import http_listener
+from packet_handler.packet_sniffer import PacketSniffer
 
 __authors__ = "\n".join(['Abdel K. Bokharouss',
                          'Adriaan Knapen'])
@@ -143,7 +143,7 @@ def main():
     # init_gui()
     arp = arp_spoof.ArpSpoof('192.168.56.101', '192.168.56.102')
     arp.scan_local_network()
-    http_l = http_listener.HttpListener(arp) # @todo use record object for ip2mac instead of an object instance
+    http_l = PacketSniffer('192.168.56.103', arp.ip_mac_pairs, 'enp0s3')
     arp.start()
     http_l.start()
     arp.join()

@@ -1,15 +1,18 @@
-from scapy.layers.inet import IP, sniff
+import threading
+
+from scapy.layers.inet import IP, sniff, sendp
 import re
 
 
-class PacketSniffer:
+class PacketSniffer(threading.Thread):
 
     def __init__(self, attacker_ips, ip_to_mac, network_interface):
+        super(PacketSniffer, self).__init__()
         self.network_interface = network_interface
         self.attacker_ips = attacker_ips
         self.ip_to_mac = ip_to_mac
 
-    def start(self):
+    def run(self):
         sniff(
             iface=self.network_interface,
             store=0,

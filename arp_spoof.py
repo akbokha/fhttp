@@ -49,7 +49,7 @@ class ArpSpoof(threading.Thread):
                 continue  # scapy does not support arp-ing on non-primary network interfaces
             if net:
                 try:
-                    ans, unans = scapy.layers.l2.arping(net, iface=iface, timeout=1, verbose=True)
+                    ans, unans = scapy.layers.l2.arping(net, iface=iface, timeout=1, verbose=False)
                     for s, r in ans.res:
                         try:
                             self.ip_mac_pairs[r.psrc] = r.hwsrc
