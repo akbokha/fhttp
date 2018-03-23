@@ -16,35 +16,38 @@ class NetworkDiscoverer:
         self._host_mac = self._ip_address = self._ip_to_mac_record = None
         self._ip_to_mac_record = IpToMacMapper()
 
-    def get_own_mac_address(self, iface, update=False):
+    def get_own_mac_address(self, iface=scapy.config.conf.iface, update=False):
         # type: (str, bool) -> str
         if self._host_mac is not None and not update:
             return self._host_mac
+        self._host_mac = get_if_hwaddr(iface)
+        return self._host_mac
+        # # WARNING: Passing None for the interface optimistically searches through all interfaces, which can lead to unexpected behaviour
+        # if iface is None:
+        #     ifaces = get_if_list()
+        # else:
+        #     ifaces = [iface]
+        #
+        # for i in ifaces:
+        #     mac = get_if_hwaddr(i)
+        #     if mac != "00:00:00:00:00:00":
+        #         return mac
+        #
+        # raise Exception("Failed to obtain local mac address")
 
-        # WARNING: Passing None for the interface optimistically searches through all interfaces, which can lead to unexpected behaviour
-        if iface is None:
-            ifaces = get_if_list()
-        else:
-            ifaces = [iface]
-
-        for i in ifaces:
-            mac = get_if_hwaddr(i)
-            if mac != "00:00:00:00:00:00":
-                return mac
-
-        raise Exception("Failed to obtain local mac address")
-
-    def get_own_ip_address(self, iface, update=False):
+    def get_own_ip_address(self, iface=scapy.config.conf.iface, update=False):
         # type: (str, bool) -> str
         if self._ip_address is not None and not update:
             return self._ip_address
-        return netifaces.ifaddresses(iface)[netifaces.AF_INET][0]['addr']
+        self._ip_address = netifaces.ifaddresses(iface)[netifaces.AF_INET][0]['addr']
+        return self._ip_address
 
     def get_ip_to_mac_mapping(self, update=False):
         if self._ip_to_mac_record is not None and not update:
             return self._ip_to_mac_record
         else:
-            return self.scan_local_network()
+            self._ip_to_mac_record = self.scan_local_network()
+            return self._ip_to_mac_record
 
     """
     courtesy of the script shared by Benedikt Waldvogel at stackOverFlow: 

@@ -143,9 +143,7 @@ class ManualInputPage(Frame):
 
 def main():
     network_discoverer = NetworkDiscoverer()
-    test_ip_mac_pair = network_discoverer.get_ip_to_mac_mapping(True).get_all()
-    for k in test_ip_mac_pair:
-        print("ip: ", k, " and mac: ", test_ip_mac_pair[k])
+    # test_ip_mac_pair = network_discoverer.get_ip_to_mac_mapping(True).get_all()
     # init_gui(network_discoverer)
 
 
