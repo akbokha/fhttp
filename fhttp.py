@@ -10,8 +10,11 @@ from Tkinter import *
 import tkMessageBox
 import tkFont as tkfont
 
-import arp_spoof
+
 from packet_handler.packet_sniffer import PacketSniffer
+from arp_spoof import ArpSpoof
+from network_discoverer import NetworkDiscoverer
+import http_listener
 
 __authors__ = "\n".join(['Abdel K. Bokharouss',
                          'Adriaan Knapen'])
@@ -20,15 +23,14 @@ __authors__ = "\n".join(['Abdel K. Bokharouss',
 script_dir = os.path.dirname(os.path.realpath(__file__))
 media_dir = script_dir + os.path.sep + 'media'
 
-threads = []
-
 
 class MainApplication(Tk):
 
-    def __init__(self):
+    def __init__(self, network_discoverer):
         Tk.__init__(self)
         self.title_font = tkfont.Font(family='Helvetica', size=15, weight='bold', slant='italic')
         self.h2_font = tkfont.Font(family='Helvetica', size=13, weight='bold')
+        self.network_discoverer = network_discoverer
 
         width = self.winfo_screenwidth() / 2
         height = self.winfo_screenheight() / 2
@@ -135,13 +137,13 @@ class ManualInputPage(Frame):
         button_start_ARP.pack()
 
     def start_spoofing(self, vIP, tIP):
-        arp = arp_spoof.ArpSpoof(vIP, tIP)
+        arp = ArpSpoof(vIP, tIP)
         arp.start()
 
 
 def main():
-    # init_gui()
-    arp = arp_spoof.ArpSpoof('192.168.56.101', '192.168.56.102')
+    init_gui()
+    arp = ArpSpoof('192.168.56.101', '192.168.56.102')
     arp.scan_local_network()
     http_l = PacketSniffer('192.168.56.103', arp.ip_mac_pairs, 'enp0s3')
     arp.start()
@@ -152,6 +154,13 @@ def main():
 
 def init_gui():
     main_app = MainApplication()
+    network_discoverer = NetworkDiscoverer()
+    init_gui(network_discoverer)
+    # ip_to_mac_record = NetworkDiscoverer.get_ip_to_mac_mapping()
+
+
+def init_gui(network_discoverer):
+    main_app = MainApplication(network_discoverer)
     main_app.mainloop()
 
 
