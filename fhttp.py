@@ -6,11 +6,12 @@
 import os
 import webbrowser
 
-import arp_spoof
-import http_listener
 from Tkinter import *
 import tkMessageBox
 import tkFont as tkfont
+
+import arp_spoof
+import http_listener
 
 __authors__ = "\n".join(['Abdel K. Bokharouss',
                          'Adriaan Knapen'])
@@ -139,14 +140,14 @@ class ManualInputPage(Frame):
 
 
 def main():
-    init_gui()
-    # arp = arp_spoof.ArpSpoof('192.168.56.101', '192.168.56.102').scan_local_network()
-    # arp = arp_spoof.ArpSpoof('192.168.56.101', '192.168.56.102')
-    # http_l = http_listener.HttpListener()
-    # arp.start()
-    # http_l.start()
-    # arp.join()
-    # http_l.join()
+    # init_gui()
+    arp = arp_spoof.ArpSpoof('192.168.56.101', '192.168.56.102')
+    arp.scan_local_network()
+    http_l = http_listener.HttpListener(arp) # @todo use record object for ip2mac instead of an object instance
+    arp.start()
+    http_l.start()
+    arp.join()
+    http_l.join()
 
 
 def init_gui():

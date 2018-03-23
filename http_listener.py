@@ -13,12 +13,6 @@ class HttpListener(threading.Thread):
     network_interface = "enp0s3"
     attacker_ips = ['192.168.56.103']
 
-    # @todo automate filling this table
-    ip_to_mac = {
-        '192.168.56.101': '08:00:27:b0:a1:ab',
-        '192.168.56.102': '08:00:27:c6:a4:61',
-    }
-
     def handle_packet(self, packet):
         """
         :param Ether packet:
@@ -33,10 +27,10 @@ class HttpListener(threading.Thread):
         # Only consider packets with an IP part.
         if IP in packet:
             # Try to lookup the actual mac address of the package
-            if packet[IP].dst not in self.ip_to_mac:
+            if packet[IP].dst not in self.spoofer.ip_mac_pairs:
                 print('received a packet for an unknown host (%s)' % packet[IP].dst)
             else:
-                target_dst = self.ip_to_mac[packet[IP].dst]
+                target_dst = self.spoofer.ip_mac_pairs[packet[IP].dst]
 
                 # Ignore packets target towards our self or already correctly targeted packets, since either we generated
                 # them or they are legitimate packets originating from our own host.
@@ -45,8 +39,9 @@ class HttpListener(threading.Thread):
                     packet.dst = target_dst
                     sendp(packet)
 
-    def __init__(self, group=None, target=None, name=None, args=(), kwargs=None, verbose=None):
+    def __init__(self, spoofer):
         threading.Thread.__init__(self)
+        self.spoofer = spoofer
 
     def run(self):
         sniff(
