@@ -5,7 +5,7 @@ from test.abstract_test import AbstractTest
 
 class TestNetworkDiscovery(AbstractTest):
 
-    def test_network_discoverer(self):
+    def test_get_ip_to_mac_mapping(self):
         expected_mapping = self.mockedMapping.get_all()
         real_mapping = NetworkDiscoverer().get_ip_to_mac_mapping(True).get_all()
 
@@ -13,6 +13,13 @@ class TestNetworkDiscovery(AbstractTest):
         for expected_ip in expected_mapping:
             self.assertIn(expected_ip, real_mapping)
             self.assertEqual(expected_mapping[expected_ip], real_mapping[expected_ip])
+
+    def test_get_own_mac_adress(self):
+        self.assertEqual('08:00:27:32:f4:6', NetworkDiscoverer().get_own_mac_address(True))
+
+    def test_get_own_ip_adress(self):
+        self.assertEqual('192.168.56.103', NetworkDiscoverer().get_own_ip_address(True))
+
 
 if __name__ == '__main__':
     unittest.main()
