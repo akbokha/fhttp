@@ -19,25 +19,25 @@ class PacketSniffer(threading.Thread):
 
         self._stored_packets = []
         self.packet_filter = CompositeFilter()
-        self.packet_injector = []
+        self.packet_injectors = []
 
     def run(self):
         sniff(
             iface=self._network_interface,
             store=0,
-            prn=self.handle_packet
+            prn=self._handle_packet
         )
 
     def get_stored_packets(self):
         return self._stored_packets
 
-    def handle_packet(self, packet):
+    def _handle_packet(self, packet):
         # type: (Ether) -> None
 
+        # Run the packet along all filters
         if self.packet_filter.is_filtered(packet):
             # self._stored_packets.append(packet)
             pass
-
 
         # Only consider packets with an IP part.
         if IP in packet:
@@ -54,6 +54,13 @@ class PacketSniffer(threading.Thread):
             # Ignore packets which are already targeted correctly, since either we generated
             # them or they are legitimate packets originating from our own host.
             if target_dst != packet.dst:
+
+                # Allow the injectors to modify the packet
+                for injector in self.packet_injectors:
+                    result = injector.inject(packet)
+                    if result is not None:
+                        packet = result
+
                 print('redirecting a packet from %s (%s) to %s' % (packet.dst, packet[IP].dst, target_dst))
                 packet.dst = target_dst
                 sendp(packet)
