@@ -10,11 +10,9 @@ from Tkinter import *
 import tkMessageBox
 import tkFont as tkfont
 
-
-from packet_handler.packet_sniffer import PacketSniffer
 from arp_spoof import ArpSpoof
 from network_discoverer import NetworkDiscoverer
-import http_listener
+from PacketHandler.packet_sniffer import PacketSniffer
 
 __authors__ = "\n".join(['Abdel K. Bokharouss',
                          'Adriaan Knapen'])
@@ -143,7 +141,7 @@ class ManualInputPage(Frame):
 
 def main():
     network_discoverer = NetworkDiscoverer()
-    test_ip_mac_pair = network_discoverer.get_ip_to_mac_mapping().get_ip_to_mac_dict()
+    test_ip_mac_pair = network_discoverer.get_ip_to_mac_mapping(True).get_all()
     for k in test_ip_mac_pair:
         print("ip: ", k, " and mac: ", test_ip_mac_pair[k])
     # init_gui(network_discoverer)

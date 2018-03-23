@@ -1,5 +1,5 @@
-from ip_to_mac import IPtoMACDict
 
+from ip_to_mac_mapper import IpToMacMapper
 import scapy.config
 import scapy.route
 from scapy.all import *
@@ -19,6 +19,7 @@ class NetworkDiscoverer:
             print(e)
             sys.exit(1)
         self.ip_address = self.get_own_ip_address()
+        self.ip_to_mac_record = IpToMacMapper()
 
     """
     Return own mac_addresss
@@ -85,5 +86,6 @@ class NetworkDiscoverer:
                         print('no permission - did you run it with root permissions?')
                     else:
                         raise  # other error type
-            self.ip_to_mac_record = IPtoMACDict(ip_mac_pairs)
-            return self.ip_to_mac_record
+
+        self.ip_to_mac_record.set_all(ip_mac_pairs)
+        return self.ip_to_mac_record
