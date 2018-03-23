@@ -15,10 +15,10 @@ class TestNetworkDiscovery(AbstractTest):
             self.assertEqual(expected_mapping[expected_ip], real_mapping[expected_ip])
 
     def test_get_own_mac_address(self):
-        self.assertEqual('08:00:27:32:f4:6a', NetworkDiscoverer().get_own_mac_address(True))
+        self.assertEqual('08:00:27:32:f4:6a', NetworkDiscoverer().get_own_mac_address('enp0s3', True))
 
     def test_get_own_ip_address(self):
-        self.assertEqual('192.168.56.103', NetworkDiscoverer().get_own_ip_address(True))
+        self.assertEqual('192.168.56.103', NetworkDiscoverer().get_own_ip_address('enp0s3', True))
 
 
 if __name__ == '__main__':

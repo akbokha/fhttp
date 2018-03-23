@@ -1,3 +1,4 @@
+import netifaces as netifaces
 
 from ip_to_mac_mapper import IpToMacMapper
 import scapy.config
@@ -12,44 +13,36 @@ class NetworkDiscoverer:
     def_mask = 0xFFFFFFFF
 
     def __init__(self):
-        self.host_mac = self.ip_address = self.ip_to_mac_record = None
-        try:
-            self.host_mac = self.get_own_mac_address()
-        except Exception as e:
-            print(e)
-            sys.exit(1)
-        self.ip_address = self.get_own_ip_address()
-        self.ip_to_mac_record = IpToMacMapper()
+        self._host_mac = self._ip_address = self._ip_to_mac_record = None
+        self._ip_to_mac_record = IpToMacMapper()
 
-    """
-    Return own mac_addresss
-    @rtype: str
-    @return: mac address
-    """
+    def get_own_mac_address(self, iface, update=False):
+        # type: (str, bool) -> str
+        if self._host_mac is not None and not update:
+            return self._host_mac
 
-    def get_own_mac_address(self, update=False):
-        if self.host_mac is not None and not update:
-            return self.host_mac
-        macs = [get_if_hwaddr(i) for i in get_if_list()]
-        for mac in macs:
+        # WARNING: Passing None for the interface optimistically searches through all interfaces, which can lead to unexpected behaviour
+        if iface is None:
+            ifaces = get_if_list()
+        else:
+            ifaces = [iface]
+
+        for i in ifaces:
+            mac = get_if_hwaddr(i)
             if mac != "00:00:00:00:00:00":
                 return mac
+
         raise Exception("Failed to obtain local mac address")
 
-    """
-    Return own ip_address
-    @rtype: str
-    @return: ip address
-    """
+    def get_own_ip_address(self, iface, update=False):
+        # type: (str, bool) -> str
+        if self._ip_address is not None and not update:
+            return self._ip_address
+        return netifaces.ifaddresses(iface)[netifaces.AF_INET][0]['addr']
 
-    def get_own_ip_address(self, update=False):
-        if self.ip_address is not None and not update:
-            return self.ip_address
-        return socket.gethostbyname(socket.gethostname())
-
-    def get_ip_to_mac_mapping(self, new_scan=False):
-        if self.ip_to_mac_record is not None and not new_scan:
-            return self.ip_to_mac_record
+    def get_ip_to_mac_mapping(self, update=False):
+        if self._ip_to_mac_record is not None and not update:
+            return self._ip_to_mac_record
         else:
             return self.scan_local_network()
 
@@ -87,5 +80,5 @@ class NetworkDiscoverer:
                     else:
                         raise  # other error type
 
-        self.ip_to_mac_record.set_all(ip_mac_pairs)
-        return self.ip_to_mac_record
+        self._ip_to_mac_record.set_all(ip_mac_pairs)
+        return self._ip_to_mac_record
