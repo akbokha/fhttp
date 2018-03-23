@@ -1,4 +1,4 @@
-from  ip_to_mac import IPtoMACDict
+from ip_to_mac import IPtoMACDict
 import scapy.config
 import scapy.route
 from scapy.all import *
@@ -12,13 +12,13 @@ class NetworkDiscoverer:
     def_mask = 0xFFFFFFFF
 
     def __init__(self):
+        self.host_mac = self.ip_address = None
         try:
-            attacker_mac = self.get_own_mac_address()
+            self.host_mac = self.get_own_mac_address()
         except Exception as e:
             print(e)
             sys.exit(1)
         self.ip_address = self.get_own_ip_address()
-        self.host_mac = attacker_mac
         self.ip_to_mac_record = None
 
     """
@@ -26,8 +26,8 @@ class NetworkDiscoverer:
     @rtype: str
     @return: mac address
     """
-    def get_own_mac_address(self):
-        if self.host_mac is None:
+    def get_own_mac_address(self, update=False):
+        if self.host_mac is not None and not update:
             return self.host_mac
         macs = [get_if_hwaddr(i) for i in get_if_list()]
         for mac in macs:
@@ -41,8 +41,9 @@ class NetworkDiscoverer:
     @return: ip address
     """
     def get_own_ip_address(self):
-        if self.ip_address is None:
+        if self.ip_address is not None:
             return self.ip_address
+        self.ip_address = socket.gethostbyname(socket.gethostname())
         return self.ip_address
 
     def get_ip_to_mac_mapping(self, new_scan=False):

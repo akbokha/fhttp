@@ -142,21 +142,12 @@ class ManualInputPage(Frame):
 
 
 def main():
-    init_gui()
-    arp = ArpSpoof('192.168.56.101', '192.168.56.102')
-    arp.scan_local_network()
-    http_l = PacketSniffer('192.168.56.103', arp.ip_mac_pairs, 'enp0s3')
-    arp.start()
-    http_l.start()
-    arp.join()
-    http_l.join()
-
-
-def init_gui():
-    main_app = MainApplication()
     network_discoverer = NetworkDiscoverer()
-    init_gui(network_discoverer)
-    # ip_to_mac_record = NetworkDiscoverer.get_ip_to_mac_mapping()
+    test_mac = network_discoverer.get_own_mac_address()
+    print("mac: ", test_mac)
+    test_ip = network_discoverer.get_own_ip_address()
+    print("ip: ", test_ip)
+    # init_gui(network_discoverer)
 
 
 def init_gui(network_discoverer):
