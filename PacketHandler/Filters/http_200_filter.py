@@ -15,7 +15,7 @@ class Http200Filter(AbstractFilter):
         tcp = packet.getlayer("TCP")
         if tcp is not None:
             if tcp.sport == 80 or tcp.dport == 80:
-                match = re.search(r"HTTP/\d\.\d 200 OK", str(tcp.payload))
+                match = re.search(r"HTTP/\d(\.\d)? 200 OK", str(tcp.payload))
                 return match is not None
 
         return False
