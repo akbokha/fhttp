@@ -14,9 +14,7 @@ class Http200Filter(AbstractFilter):
         # https://stackoverflow.com/questions/27551367/http-get-packet-sniffer-in-scapy#27566057
         tcp = packet.getlayer("TCP")
         if tcp is not None:
-            if tcp.sport == 80 or tcp.dport == 80:
-                match = re.search(r"HTTP/\d(\.\d)? 200 OK", str(tcp.payload))
-                return match is not None
+            match = re.search(r"^HTTP/\d(\.\d)? 200 OK[^\n]*\r\n", str(tcp.payload))
+            return match is not None
 
         return False
-        # return super(HttpCookie, self).is_filtered(packet)
