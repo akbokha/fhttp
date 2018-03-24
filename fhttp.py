@@ -29,6 +29,8 @@ class MainApplication(Tk):
         self.title_font = tkfont.Font(family='Helvetica', size=15, weight='bold', slant='italic')
         self.h2_font = tkfont.Font(family='Helvetica', size=13, weight='bold')
         self.network_discoverer = network_discoverer
+        self.own_mac_address = network_discoverer.get_own_mac_address()
+        self.own_ip_address = network_discoverer.get_own_ip_address()
 
         width = self.winfo_screenwidth() / 2
         height = self.winfo_screenheight() / 2
@@ -133,18 +135,18 @@ class ManualInputPage(Frame):
         # @todo add a drop down for all all available network interfaces
 
         button_start_ARP = Button(self, text="Start ARP Spoofing",
-                                  command=lambda:self.start_spoofing('enp0s3', entry_ip_victim.get(), entry_ip_target.get()))
+                                  command=lambda:self.start_spoofing(entry_ip_victim.get(), entry_ip_target.get()))
         button_start_ARP.pack()
 
-    def start_spoofing(self, iface, vIP, tIP):
-        arp = ArpSpoof(iface, vIP, tIP)
+    def start_spoofing(self, vIP, tIP):
+        arp = ArpSpoof(vIP, tIP)
         arp.start()
 
 
 def main():
     network_discoverer = NetworkDiscoverer()
     # test_ip_mac_pair = network_discoverer.get_ip_to_mac_mapping(True).get_all()
-    # init_gui(network_discoverer)
+    init_gui(network_discoverer)
 
 
 def init_gui(network_discoverer):

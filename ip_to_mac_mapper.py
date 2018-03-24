@@ -33,4 +33,3 @@ class IpToMacMapper:
             return self._ip_to_mac[ip]
 
         return None
-
