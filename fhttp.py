@@ -92,26 +92,29 @@ class MainApplication(Tk):
 
 class OutputFrame(Frame):
 
+    status = '[status] '
+    output = '[output] '
+
     def __init__(self, parent):
         Frame.__init__(self, parent)
         self.configure(bg='black')
-        self.status_message = Message(self, width=500, text='no status to display')
+        self.status_message = Message(self, anchor=W, width=1200, text=self.status.__add__('no status to display'))
         self.status_message.config(bg='black', foreground='white')
-        self.status_message.pack(side=TOP, anchor=W, fill=X, expand=YES)
+        self.status_message.pack(side=TOP, anchor=W, fill=X)
 
-        self.output_message = Message(self, width=500, text='no output to display')
+        self.output_message = Message(self, anchor=W, width=1200, text=self.output.__add__('no output to display'))
         self.output_message.config(bg='black', foreground='white')
-        self.output_message.pack(side=TOP, anchor=W, fill=X, expand=YES)
+        self.output_message.pack(side=TOP, anchor=W, fill=X)
 
     def update_status(self, message):
         if type(message) is str:  # single string
-            self.status_message = Message(self, text=message)
+            self.status_message = Message(self, text=self.message.__add__(message))
         else:  # to-do: figure out how to handle list/collection of strings in an elegant way
             pass
 
     def update_output(self, message):
         if type(message) is str:  # single string
-            self.output_message = Message(self, text=message)
+            self.output_message = Message(self, text=self.output__add__(message))
         else:  # to-do: figure out how to handle list/collection of strings in an elegant way
             pass
 
