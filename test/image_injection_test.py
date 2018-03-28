@@ -1,4 +1,4 @@
-from PacketHandler.Injectors.accept_encoding_substituter import AcceptEncodingSubstituter
+from accept_encoding_substituter import AcceptEncodingSubstituter
 from PacketHandler.Injectors.img_tag_injector import ImgTagInjector
 from PacketHandler.packet_sniffer import PacketSniffer
 from arp_spoof import ArpSpoof

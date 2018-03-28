@@ -1,6 +1,6 @@
 import threading
 
-from scapy.all import sniff, send
+from scapy.all import sniff, send, wireshark
 from scapy.layers.inet import IP, TCP
 from scapy.layers.l2 import Ether, sendp
 
@@ -53,12 +53,13 @@ class PacketSniffer(threading.Thread):
 
             # Ignore packets which are already targeted correctly, since either we generated
             # them or they are legitimate packets originating from our own host.
-            if target_dst != packet.dst:
+            if target_dst.lower() != packet.dst.lower():
 
                 # Allow the injectors to modify the packet
                 for injector in self.packet_injectors:
                     result = injector.inject(packet)
                     if result is not None:
+                        wireshark([packet, result])
                         packet = result
 
                 print('redirecting a packet from %s (%s) to %s' % (packet.dst, packet[IP].dst, target_dst))

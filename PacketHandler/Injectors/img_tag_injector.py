@@ -17,7 +17,12 @@ class ImgTagInjector(AbstractInjector):
         if not self._filter.is_filtered(packet):
             return
 
-        payload = re.sub('<body>', '\0<img url="http://blabla.com">', str(packet[TCP].payload), 1, re.IGNORECASE)
+        payload = str(packet[TCP].payload)
+        match = re.match('<body>', payload, re.IGNORECASE)
+        if match is not None:
+            print(match.group(0))
+
+        payload = re.sub('<body>', '<body><img url="http://blabla.com">', payload, 1, re.IGNORECASE)
         del packet[TCP].chksum
         del packet[IP].chksum
         del packet[IP].len

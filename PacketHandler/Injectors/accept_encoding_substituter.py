@@ -1,7 +1,6 @@
 from scapy.layers.inet import TCP, IP
 from scapy.layers.l2 import Ether
 
-from PacketHandler.Filters.http_200_filter import Http200Filter
 from PacketHandler.Filters.http_request_filter import HttpRequestFilter
 from PacketHandler.Injectors.abstract_injector import AbstractInjector
 import re
@@ -17,7 +16,8 @@ class AcceptEncodingSubstituter(AbstractInjector):
         if not self._filter.is_filtered(packet):
             return
 
-        payload = re.sub('Accept-Encoding: [^(\r\n)]*', self._replacement, str(packet[TCP].payload), 1, re.IGNORECASE)
+        payload = str(packet[TCP].payload)
+        new_payload = re.sub('Accept-Encoding: [^(\r\n)]*', self._replacement, payload, 1, re.IGNORECASE)
         del packet[TCP].chksum
         del packet[IP].chksum
         del packet[IP].len
@@ -25,6 +25,6 @@ class AcceptEncodingSubstituter(AbstractInjector):
         packet[TCP].add_payload(payload)
         packet[TCP].build()
 
-        print('! Substituted Accept-Encoding header')
-
-        return packet
+        if payload != new_payload:
+            print('! Substituted Accept-Encoding header')
+            return packet.clone_with(new_payload)
