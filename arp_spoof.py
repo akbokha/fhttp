@@ -11,7 +11,7 @@ from scapy.layers.l2 import ARP, Ether
 
 class ArpSpoof(threading.Thread):
 
-    def __init__(self, iface, vIP, tIP):
+    def __init__(self, vIP, tIP, iface=scapy.config.conf.iface):
         self.iface = iface
         self.vIP = vIP
         self.tIP = tIP
