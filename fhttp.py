@@ -9,6 +9,7 @@ import tkMessageBox
 import webbrowser
 from Tkinter import *
 from ttk import Notebook
+from collections import OrderedDict
 
 from arp_spoof import ArpSpoof
 from network_discoverer import NetworkDiscoverer
@@ -48,8 +49,8 @@ class MainApplication(Tk):
             self.columnconfigure(row, weight=1)
 
         # notebook configuration (tabs)
-        notebook = Notebook(self)
-        notebook.grid(row=1, column=0, columnspan=100, rowspan=50, sticky='nesw', padx=5)
+        self.notebook = Notebook(self)
+        self.notebook.grid(row=1, column=0, columnspan=100, rowspan=50, sticky='nesw', padx=5)
 
         # output frame configuration
         self.output = OutputFrame(parent=self)
@@ -57,11 +58,16 @@ class MainApplication(Tk):
 
         # notebook frames
         self.tabs = {}
-        for tab in (WelcomePage, StartScanPage, ManualInputPage):
-            tab_frame_name = tab.__name__
-            frame = tab(parent=notebook, controller=self)
-            notebook.add(frame, text=tab_frame_name)
-            self.tabs[tab_frame_name] = frame
+        self.tab_mapping = OrderedDict([
+            (StartFrame, 'Start'),
+            (LocalNetworkScanFrame, 'Local Network Scan'),
+            (ARPSpoofFrame, 'ARP Spoofing')
+        ])
+        for tab in self.tab_mapping.keys():
+            tab_frame_name = self.tab_mapping[tab]
+            frame = tab(parent=self.notebook, controller=self)
+            self.notebook.add(frame, text=tab_frame_name)
+            self.tabs[tab.__name__] = frame
 
         tkMessageBox.showinfo("fHTTP", "\n\n\nWelcome to fhttp\n\n"
                                        "We inherently trust no one, including each other\n\n\n".ljust(500))
@@ -89,9 +95,12 @@ class MainApplication(Tk):
     def display_support_doc():
         webbrowser.open('https://github.com/akbokha/fhttp')
 
+    def show_frame(self, page_name):
+        frame = self.tabs[page_name]
+        self.notebook.select(self.notebook.index(frame))
+
 
 class OutputFrame(Frame):
-
     status = '[status] '
     output = '[output] '
 
@@ -119,7 +128,8 @@ class OutputFrame(Frame):
             pass
 
 
-class WelcomePage(Frame):
+# Start tab frames
+class StartFrame(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
@@ -129,17 +139,21 @@ class WelcomePage(Frame):
         label_welcome = Label(self, text='Welcome to fhttp\n'
                                          'We inherently trust no one, including each other',
                               font=controller.title_font)
-        label_welcome.pack(side='top', pady=20)
+        label_welcome.pack(side='top', pady=10)
+
+        self.img_icon = PhotoImage(file=media_dir + os.path.sep + 'fhttp_logo.png')
+        img_panel = Label(self, image=self.img_icon)
+        img_panel.pack(side='top', pady=5)
 
         button_scan = Button(self, text="Start exploring the local network",
-                           command=lambda: controller.show_frame("StartScanPage"))
-        button_scan.pack()
-        button_manual = Button(self, text="Set victim and target manually",
-                        command=lambda: controller.show_frame("ManualInputPage"))
-        button_manual.pack()
+                             command=lambda: controller.show_frame("LocalNetworkScanFrame"))
+        button_scan.pack(side='top')
+        # button_manual = Button(self, text="Set victim and target manually",
+        #                 command=lambda: controller.show_frame("ManualInputPage"))
+        # button_manual.pack()
 
 
-class StartScanPage(Frame):
+class LocalNetworkScanFrame(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
@@ -151,7 +165,7 @@ class StartScanPage(Frame):
         button_scan.pack()
 
 
-class ManualInputPage(Frame):
+class ARPSpoofFrame(Frame):
 
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
