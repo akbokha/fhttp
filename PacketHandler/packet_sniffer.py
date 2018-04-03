@@ -1,7 +1,7 @@
 import threading
 
-from scapy.all import sniff, send, wireshark
-from scapy.layers.inet import IP, TCP
+from scapy.all import sniff, wireshark
+from scapy.layers.inet import IP
 from scapy.layers.l2 import Ether, sendp
 
 from PacketHandler.Filters.composite_filter import CompositeFilter

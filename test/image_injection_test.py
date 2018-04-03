@@ -10,7 +10,7 @@ mapping = IpToMacMapper().set_all({
     '192.168.56.102': '08:00:27:C6:A4:61',
 })
 
-arp = ArpSpoof('enp0s3', '192.168.56.101', '192.168.56.102')
+arp = ArpSpoof('192.168.56.101', '192.168.56.102')
 arp.start()
 
 packet_sniffer = PacketSniffer(['192.168.56.103'], mapping, 'enp0s3')

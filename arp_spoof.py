@@ -3,7 +3,6 @@
 import threading
 from time import sleep
 
-from ip_to_mac_mapper import IpToMacMapper
 from network_discoverer import NetworkDiscoverer
 from scapy.all import *
 from scapy.layers.l2 import ARP, Ether
