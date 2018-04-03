@@ -2,7 +2,7 @@ from arp_spoof import ArpSpoof
 from ip_to_mac_mapper import IpToMacMapper
 from network_discoverer import NetworkDiscoverer
 
-arp = ArpSpoof('enp0s3', '192.168.56.101', '192.168.56.102')
+arp = ArpSpoof('192.168.56.101', '192.168.56.102')
 network_discoverer = NetworkDiscoverer()
 
 # Mocking the ip to mac mapper.
