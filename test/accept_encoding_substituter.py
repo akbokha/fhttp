@@ -1,4 +1,4 @@
-from accept_encoding_substituter import AcceptEncodingSubstituter
+from PacketHandler.Injectors.accept_encoding_substituter import AcceptEncodingSubstituter
 from PacketHandler.packet_sniffer import PacketSniffer
 from arp_spoof import ArpSpoof
 from ip_to_mac_mapper import IpToMacMapper
