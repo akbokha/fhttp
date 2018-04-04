@@ -26,6 +26,7 @@ class MainApplication(Tk):
 
     def __init__(self, network_discoverer):
         Tk.__init__(self)
+        self.winfo_toplevel().title("fHTTP")
         self.title_font = tkfont.Font(family='Helvetica', size=15, weight='bold', slant='italic')
         self.h2_font = tkfont.Font(family='Helvetica', size=13, weight='bold')
         self.network_discoverer = network_discoverer
@@ -182,6 +183,7 @@ class LocalNetworkScanFrame(Frame):
 
     def scan_and_update_list(self):
         self.controller.output.update_status('Scanning the local network ...')
+        self.listbox.delete(0, END)  # clear entries
         self.controller.scan_and_update()
         self.controller.output.update_status('Local network scan complete')
         for item in self.controller.ip_to_mac.keys():
