@@ -31,6 +31,8 @@ class MainApplication(Tk):
         self.network_discoverer = network_discoverer
         self.own_mac_address = network_discoverer.get_own_mac_address()
         self.own_ip_address = network_discoverer.get_own_ip_address()
+        self.ip_to_mac = None
+        self.ip_to_mac_record = None
         self.configure(background='darkgrey')
 
         width = int(self.winfo_screenwidth() / 1.5)
@@ -99,6 +101,10 @@ class MainApplication(Tk):
         frame = self.tabs[page_name]
         self.notebook.select(self.notebook.index(frame))
 
+    def scan_and_update(self):
+        self.ip_to_mac_record = self.network_discoverer.get_ip_to_mac_mapping(update=True)
+        self.ip_to_mac = self.ip_to_mac_record.get_all()
+
 
 class OutputFrame(Frame):
     status = '[status] '
@@ -107,23 +113,29 @@ class OutputFrame(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent)
         self.configure(bg='black')
-        self.status_message = Message(self, anchor=W, width=1200, text=self.status.__add__('no status to display'))
+        self.status_text = 'no status to display'
+        self.status_message = Message(self, anchor=W, width=1200, text=self.status.__add__(self.status_text))
         self.status_message.config(bg='black', foreground='white')
         self.status_message.pack(side=TOP, anchor=W, fill=X)
 
-        self.output_message = Message(self, anchor=W, width=1200, text=self.output.__add__('no output to display'))
+        self.output_text = 'no output to display'
+        self.output_message = Message(self, anchor=W, width=1200, text=self.output.__add__(self.output_text))
         self.output_message.config(bg='black', foreground='white')
         self.output_message.pack(side=TOP, anchor=W, fill=X)
 
     def update_status(self, message):
         if type(message) is str:  # single string
-            self.status_message = Message(self, text=self.message.__add__(message))
+            self.status_text = message
+            self.status_message.configure(text=self.status.__add__(self.status_text))
+            self.update()
         else:  # to-do: figure out how to handle list/collection of strings in an elegant way
             pass
 
     def update_output(self, message):
         if type(message) is str:  # single string
-            self.output_message = Message(self, text=self.output__add__(message))
+            self.output_text = message
+            self.output_message = self.output_message.configure(text=self.output.__add__(self.output_text))
+            self.update()
         else:  # to-do: figure out how to handle list/collection of strings in an elegant way
             pass
 
@@ -161,8 +173,19 @@ class LocalNetworkScanFrame(Frame):
         label_scan = Label(self, text='Let\'s check who (and what) is connected to our local network',
                            font=controller.h2_font)
         label_scan.pack(side='top', pady=20)
-        button_scan = Button(self, text="Scan local network")
+        button_scan = Button(self, text="Scan local network",
+                             command=lambda: self.scan_and_update_list())
         button_scan.pack()
+
+        self.listbox = Listbox(self, width=50)
+        self.listbox.pack(side='top', pady=20)
+
+    def scan_and_update_list(self):
+        self.controller.output.update_status('Scanning the local network ...')
+        self.controller.scan_and_update()
+        self.controller.output.update_status('Local network scan complete')
+        for item in self.controller.ip_to_mac.keys():
+            self.listbox.insert(END, (item + " - " + self.controller.ip_to_mac[item]))
 
 
 class ARPSpoofFrame(Frame):
