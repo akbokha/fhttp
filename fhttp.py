@@ -36,6 +36,9 @@ class MainApplication(Tk):
         self.ip_to_mac_record = None
         self.configure(background='darkgrey')
 
+        self.victim = None
+        self.target = None
+
         width = int(self.winfo_screenwidth() / 1.5)
         height = int(self.winfo_screenheight() / 1.5)
         x_start = int(self.winfo_screenwidth() / 5)
@@ -124,17 +127,23 @@ class OutputFrame(Frame):
         self.output_message.config(bg='black', foreground='white')
         self.output_message.pack(side=TOP, anchor=W, fill=X)
 
-    def update_status(self, message):
+    def update_status(self, message, append=False):
         if type(message) is str:  # single string
-            self.status_text = message
+            if append:
+                self.status_text += message
+            else:
+                self.status_text = message
             self.status_message.configure(text=self.status.__add__(self.status_text))
             self.update()
         else:  # to-do: figure out how to handle list/collection of strings in an elegant way
             pass
 
-    def update_output(self, message):
+    def update_output(self, message, append=False):
         if type(message) is str:  # single string
-            self.output_text = message
+            if append:
+                self.output_text += message
+            else:
+                self.output_text = message
             self.output_message = self.output_message.configure(text=self.output.__add__(self.output_text))
             self.update()
         else:  # to-do: figure out how to handle list/collection of strings in an elegant way
@@ -178,8 +187,12 @@ class LocalNetworkScanFrame(Frame):
                              command=lambda: self.scan_and_update_list())
         button_scan.pack()
 
-        self.listbox = Listbox(self, width=50)
-        self.listbox.pack(side='top', pady=20)
+        self.listbox = Listbox(self, width=50, selectmode=SINGLE)
+        self.listbox.pack(side='top', pady=10)
+
+        self.button_select_item = Button(self, text="Set as Victim",
+                                         command=lambda: self.set_victim())
+        self.button_select_item.pack(pady=10)
 
     def scan_and_update_list(self):
         self.controller.output.update_status('Scanning the local network ...')
@@ -188,6 +201,30 @@ class LocalNetworkScanFrame(Frame):
         self.controller.output.update_status('Local network scan complete')
         for item in self.controller.ip_to_mac.keys():
             self.listbox.insert(END, (item + " - " + self.controller.ip_to_mac[item]))
+
+    def set_victim(self):
+        list_items = self.listbox.curselection()
+        list_items = [int(item) for item in list_items]
+        if len(list_items) > 0:  # an item is selected
+            self.controller.victim = self.get_ip_address(str(self.listbox.get(list_items[0])))
+            self.listbox.selection_clear(0, END)
+            self.controller.output.update_status("Victim: " + self.controller.victim, append=False)
+            self.button_select_item.configure(text="Set as Target", command=lambda: self.set_target())
+
+    def set_target(self):
+        list_items = self.listbox.curselection()
+        list_items = [int(item) for item in list_items]
+        if len(list_items) > 0:  # an item is selected
+            self.controller.target = self.get_ip_address(str(self.listbox.get(list_items[0])))
+            self.listbox.selection_clear(0, END)
+            self.controller.output.update_status(", Target: " + self.controller.target, append=True)
+            self.button_select_item.configure(text="Start ARP spoofing",
+                                              command=lambda: self.controller.show_frame("ARPSpoofFrame"))
+
+    @staticmethod
+    def get_ip_address(str_value):
+        index = str_value.find('-')
+        return str_value[:(index - 1)]
 
 
 class ARPSpoofFrame(Frame):
@@ -201,16 +238,18 @@ class ARPSpoofFrame(Frame):
         label.pack(side='top', pady=20)
         label_ip_victim = Label(self, text='Victim IP Address: ').pack()
         entry_ip_victim = Entry(self)
+        if self.controller.victim is not None:
+            entry_ip_victim.insert(0, self.controller.victim)
         entry_ip_victim.pack()
         label_ip_target = Label(self, text='Target IP Address: ').pack()
         entry_ip_target = Entry(self)
+        if self.controller.target is not None:
+            entry_ip_target.insert(0, self.controller.target)
         entry_ip_target.pack()
-
-        # @todo add a drop down for all all available network interfaces
 
         button_start_ARP = Button(self, text="Start ARP Spoofing",
                                   command=lambda: self.start_spoofing(entry_ip_victim.get(), entry_ip_target.get()))
-        button_start_ARP.pack()
+        button_start_ARP.pack(pady=10)
 
     @staticmethod
     def start_spoofing(vIP, tIP):
