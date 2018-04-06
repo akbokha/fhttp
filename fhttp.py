@@ -56,11 +56,11 @@ class MainApplication(Tk):
 
         # notebook configuration (tabs)
         self.notebook = Notebook(self)
-        self.notebook.grid(row=1, column=0, columnspan=100, rowspan=50, sticky='nesw', padx=5)
+        self.notebook.grid(row=1, column=0, columnspan=100, rowspan=30, sticky='nesw', padx=5)
 
         # output frame configuration
         self.output = OutputFrame(parent=self)
-        self.output.grid(row=53, column=0, columnspan=100, rowspan=45, sticky='nesw', padx=5)
+        self.output.grid(row=33, column=0, columnspan=100, rowspan=65, sticky='nesw', padx=5)
 
         # notebook frames
         self.tabs = {}
@@ -103,6 +103,10 @@ class MainApplication(Tk):
 
     def show_frame(self, page_name):
         frame = self.tabs[page_name]
+        try:
+            frame.update()
+        except AttributeError:
+            pass
         self.notebook.select(self.notebook.index(frame))
 
     def scan_and_update(self):
@@ -170,9 +174,6 @@ class StartFrame(Frame):
         button_scan = Button(self, text="Start exploring the local network",
                              command=lambda: controller.show_frame("LocalNetworkScanFrame"))
         button_scan.pack(side='top')
-        # button_manual = Button(self, text="Set victim and target manually",
-        #                 command=lambda: controller.show_frame("ManualInputPage"))
-        # button_manual.pack()
 
 
 class LocalNetworkScanFrame(Frame):
@@ -226,6 +227,9 @@ class LocalNetworkScanFrame(Frame):
         index = str_value.find('-')
         return str_value[:(index - 1)]
 
+    def update(self):
+        pass
+
 
 class ARPSpoofFrame(Frame):
 
@@ -233,23 +237,28 @@ class ARPSpoofFrame(Frame):
         Frame.__init__(self, parent)
         self.controller = controller
         self.parent = parent
+
         label = Label(self, text='Identify the target and victim who need to be spoofed',
                       font=controller.h2_font)
         label.pack(side='top', pady=20)
+
         label_ip_victim = Label(self, text='Victim IP Address: ').pack()
-        entry_ip_victim = Entry(self)
-        if self.controller.victim is not None:
-            entry_ip_victim.insert(0, self.controller.victim)
-        entry_ip_victim.pack()
+        self.entry_ip_victim = Entry(self)
+        self.entry_ip_victim.pack()
+
         label_ip_target = Label(self, text='Target IP Address: ').pack()
-        entry_ip_target = Entry(self)
-        if self.controller.target is not None:
-            entry_ip_target.insert(0, self.controller.target)
-        entry_ip_target.pack()
+        self.entry_ip_target = Entry(self)
+        self.entry_ip_target.pack()
 
         button_start_ARP = Button(self, text="Start ARP Spoofing",
-                                  command=lambda: self.start_spoofing(entry_ip_victim.get(), entry_ip_target.get()))
+                                  command=lambda: self.start_spoofing(self.entry_ip_victim.get(), self.entry_ip_target.get()))
         button_start_ARP.pack(pady=10)
+
+    def update(self):
+        if self.controller.victim is not None:
+            self.entry_ip_victim.insert(0, self.controller.victim)
+        if self.controller.target is not None:
+            self.entry_ip_target.insert(0, self.controller.target)
 
     @staticmethod
     def start_spoofing(vIP, tIP):
