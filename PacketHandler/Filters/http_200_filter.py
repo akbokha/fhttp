@@ -1,18 +1,7 @@
-import re
-
-from scapy.layers.l2 import Ether
-
-from abstract_filter import AbstractFilter
+from PacketHandler.Filters.tcp_regex_filter import TcpRegexFilter
 
 
-class Http200Filter(AbstractFilter):
+class Http200Filter(TcpRegexFilter):
 
-    def is_filtered(self, packet):
-        # type: (Ether) -> bool
-        
-        tcp = packet.getlayer("TCP")
-        if tcp is not None:
-            match = re.search(r"^HTTP/\d(\.\d)? 200 OK[^\n]*\r\n", str(tcp.payload))
-            return match is not None
-
-        return False
+    def __init__(self):
+        super(Http200Filter, self).__init__('^HTTP/\d(\.\d)? 200 OK[^\n]*\r\n[\s\S]*$')

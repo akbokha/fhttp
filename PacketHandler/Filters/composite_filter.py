@@ -26,3 +26,15 @@ class CompositeFilter(AbstractFilter):
     def detach(self, f):
         if f in self.filters:
             self.filters.remove(f)
+
+    def to_string(self, packet):
+        result = []
+        for f in self.filters:
+            s = f.to_string(packet)
+            if s is not None:
+                result.append(type(f).__name__ + " " + s)
+
+        if result:
+            return '\n'.join(result)
+        else:
+            return

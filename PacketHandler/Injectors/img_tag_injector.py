@@ -22,14 +22,8 @@ class ImgTagInjector(AbstractInjector):
         if match is not None:
             print(match.group(0))
 
-        payload = re.sub('<body>', '<body><img url="http://blabla.com">', payload, 1, re.IGNORECASE)
-        del packet[TCP].chksum
-        del packet[IP].chksum
-        del packet[IP].len
-        packet[TCP].remove_payload()
-        packet[TCP].add_payload(payload)
-        packet[TCP].build()
+        new_payload = re.sub('<body>', '<body><img scr="http://192.168.56.102/favicon.ico">', payload, 1, re.IGNORECASE ^ re.MULTILINE)
 
-        print('! Injected image tag')
-
-        return packet
+        if new_payload != payload:
+            print('! Injected image tag')
+            return self.replace_packet_tcp_payload(packet, new_payload)

