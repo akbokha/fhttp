@@ -9,6 +9,7 @@ from scapy.layers.l2 import ARP, Ether
 
 
 class ArpSpoof(threading.Thread):
+    keep_alive = True
 
     def __init__(self, vIP, tIP, iface=scapy.config.conf.iface):
         self.iface = iface
@@ -25,6 +26,6 @@ class ArpSpoof(threading.Thread):
         ])
 
     def run(self):
-        while True:
+        while True and self.keep_alive:
             self.spoof_arp()
             sleep(10)
