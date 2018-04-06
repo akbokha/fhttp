@@ -26,6 +26,6 @@ class ArpSpoof(threading.Thread):
         ])
 
     def run(self):
-        while True and self.keep_alive:
+        while self.keep_alive:
             self.spoof_arp()
             sleep(10)
