@@ -10,6 +10,7 @@ import webbrowser
 from Tkinter import *
 from ttk import Notebook
 from collections import OrderedDict
+import socket
 
 from arp_spoof import ArpSpoof
 from network_discoverer import NetworkDiscoverer
@@ -35,6 +36,8 @@ class MainApplication(Tk):
         self.ip_to_mac = None
         self.ip_to_mac_record = None
         self.configure(background='darkgrey')
+
+        self.is_spoofing = self.is_extracting = self.is_filtering = False
 
         self.victim = None
         self.target = None
@@ -121,7 +124,8 @@ class OutputFrame(Frame):
     def __init__(self, parent):
         Frame.__init__(self, parent)
         self.configure(bg='black')
-        self.status_text = 'no status to display'
+        self.no_status = 'no status to display'
+        self.status_text = self.no_status
         self.status_message = Message(self, anchor=W, width=1200, text=self.status.__add__(self.status_text))
         self.status_message.config(bg='black', foreground='white')
         self.status_message.pack(side=TOP, anchor=W, fill=X)
@@ -195,6 +199,10 @@ class LocalNetworkScanFrame(Frame):
                                          command=lambda: self.set_victim())
         self.button_select_item.pack(pady=10)
 
+        self.button_reset_config = Button(self, text="Reset Configuration",
+                                          command=lambda: self.reset_network_scan())
+        self.button_reset_config.pack(pady=10)
+
     def scan_and_update_list(self):
         self.controller.output.update_status('Scanning the local network ...')
         self.listbox.delete(0, END)  # clear entries
@@ -220,7 +228,17 @@ class LocalNetworkScanFrame(Frame):
             self.listbox.selection_clear(0, END)
             self.controller.output.update_status(", Target: " + self.controller.target, append=True)
             self.button_select_item.configure(text="Start ARP spoofing",
-                                              command=lambda: self.controller.show_frame("ARPSpoofFrame"))
+                                              command=lambda: self.start_spoofing())
+
+    def start_spoofing(self):
+        self.button_select_item.configure(text="Set as Victim",
+                                          command=lambda: self.set_victim())
+        self.controller.show_frame("ARPSpoofFrame")
+
+    def reset_network_scan(self):
+        self.listbox.delete(0, END)  # clear entries
+        self.button_select_item.configure(text="Set as Victim", command=lambda: self.set_victim())
+        self.controller.output.update_status(self.controller.output.no_status, append=False)
 
     @staticmethod
     def get_ip_address(str_value):
@@ -237,6 +255,7 @@ class ARPSpoofFrame(Frame):
         Frame.__init__(self, parent)
         self.controller = controller
         self.parent = parent
+        self.arp = None
 
         label = Label(self, text='Identify the target and victim who need to be spoofed',
                       font=controller.h2_font)
@@ -250,25 +269,69 @@ class ARPSpoofFrame(Frame):
         self.entry_ip_target = Entry(self)
         self.entry_ip_target.pack()
 
-        button_start_ARP = Button(self, text="Start ARP Spoofing",
-                                  command=lambda: self.start_spoofing(self.entry_ip_victim.get(), self.entry_ip_target.get()))
-        button_start_ARP.pack(pady=10)
+        self.button_ARP = Button(self, text="Start ARP Spoofing",
+                                 command=lambda: self.start_spoofing(self.entry_ip_victim.get(),
+                                                                     self.entry_ip_target.get()))
+        self.button_ARP.pack(pady=10)
 
     def update(self):
         if self.controller.victim is not None:
+            self.entry_ip_victim.delete(0, END)  # clear entry
             self.entry_ip_victim.insert(0, self.controller.victim)
         if self.controller.target is not None:
+            self.entry_ip_target.delete(0, END)
             self.entry_ip_target.insert(0, self.controller.target)
 
+    def start_spoofing(self, vIP, tIP):
+        if ARPSpoofFrame.is_valid_ip_address(vIP) and ARPSpoofFrame.is_valid_ip_address(tIP):
+            self.button_ARP.configure(text="Stop ARP Spoofing", command=lambda: self.stop_spoofing())
+            self.controller.is_spoofing = True
+            self.arp = ArpSpoof(vIP, tIP)
+            self.controller.output.update_status('ARP Spoofing ' + vIP + " and " + tIP, append=False)
+            self.arp.start()
+        else:
+            tkMessageBox.showerror("Specify the target and victim",
+                                   "Please specify the IP addresses of the victim and target and check whether the IP "
+                                   "address notation is correct")
+
+    def stop_spoofing(self):
+        self.button_ARP.configure(text="Start ARP Spoofing",
+                                  command=lambda: self.start_spoofing(self.entry_ip_victim.get(),
+                                                                      self.entry_ip_target.get()))
+        self.controller.output.update_status("ARP Spoofing thread terminated", append=False)
+        self.controller.is_spoofing = False
+        self.arp.keep_alive = False
+
     @staticmethod
-    def start_spoofing(vIP, tIP):
-        arp = ArpSpoof(vIP, tIP)
-        arp.start()
+    def is_valid_ip_address(address):
+        return ARPSpoofFrame.is_valid_ipv4_address(address) or ARPSpoofFrame.is_valid_ipv6_address(address)
+
+    # Copied from tzot's answer - https://stackoverflow.com/questions/319279/how-to-validate-ip-address-in-python
+    @staticmethod
+    def is_valid_ipv4_address(address):
+        try:
+            socket.inet_pton(socket.AF_INET, address)
+        except AttributeError:  # no inet_pton here, sorry
+            try:
+                socket.inet_aton(address)
+            except socket.error:
+                return False
+            return address.count('.') == 3
+        except socket.error:  # not a valid address
+            return False
+        return True
+
+    @staticmethod
+    def is_valid_ipv6_address(address):
+        try:
+            socket.inet_pton(socket.AF_INET6, address)
+        except socket.error:  # not a valid address
+            return False
+        return True
 
 
 def main():
     network_discoverer = NetworkDiscoverer()
-    # test_ip_mac_pair = network_discoverer.get_ip_to_mac_mapping(True).get_all()
     init_gui(network_discoverer)
 
 
