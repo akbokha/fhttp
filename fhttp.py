@@ -70,7 +70,8 @@ class MainApplication(Tk):
         self.tab_mapping = OrderedDict([
             (StartFrame, 'Start'),
             (LocalNetworkScanFrame, 'Local Network Scan'),
-            (ARPSpoofFrame, 'ARP Spoofing')
+            (ARPSpoofFrame, 'ARP Spoofing'),
+            (InjectorExtractorFrame, 'Injection and Extraction')
         ])
         for tab in self.tab_mapping.keys():
             tab_frame_name = self.tab_mapping[tab]
@@ -95,21 +96,24 @@ class MainApplication(Tk):
 
     @staticmethod
     def display_about():
-        tkMessageBox.showinfo("About", "Lorem ipsum dolor sit amet, "
-                                       "consectetur adipiscing elit,"
-                                       " sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. \n\n"
-                                       "Abdel K. Bokharouss and Adriaan Knapen \n")
+        tkMessageBox.showinfo("About",
+                              "fhttp is an application which is capable of exploiting vulnerabilities "
+                              "such as ARP cache poisoning. The (man-in-the-middle) positions that are acquired "
+                              "through the exploitation of these vulnerabilities are then used for things such as "
+                              "packet-sniffing, the `theft' of (insecure) cookies and img-tag-injection\n\n"
+                              "Abdel K. Bokharouss and Adriaan Knapen \n")
 
     @staticmethod
     def display_support_doc():
         webbrowser.open('https://github.com/akbokha/fhttp')
 
-    def show_frame(self, page_name):
+    def show_frame(self, page_name, update=False):
         frame = self.tabs[page_name]
-        try:
-            frame.update()
-        except AttributeError:
-            pass
+        if update:
+            try:
+                frame.update()
+            except AttributeError:
+                pass
         self.notebook.select(self.notebook.index(frame))
 
     def scan_and_update(self):
@@ -182,7 +186,7 @@ class StartFrame(Frame):
 
 class LocalNetworkScanFrame(Frame):
 
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller, reset=FALSE):
         Frame.__init__(self, parent)
         self.controller = controller
         label_scan = Label(self, text='Let\'s check who (and what) is connected to our local network',
@@ -233,7 +237,7 @@ class LocalNetworkScanFrame(Frame):
     def start_spoofing(self):
         self.button_select_item.configure(text="Set as Victim",
                                           command=lambda: self.set_victim())
-        self.controller.show_frame("ARPSpoofFrame")
+        self.controller.show_frame("ARPSpoofFrame", update=True)
 
     def reset_network_scan(self):
         self.listbox.delete(0, END)  # clear entries
@@ -246,7 +250,7 @@ class LocalNetworkScanFrame(Frame):
         return str_value[:(index - 1)]
 
     def update(self):
-        pass
+        self.reset_network_scan()
 
 
 class ARPSpoofFrame(Frame):
@@ -259,7 +263,7 @@ class ARPSpoofFrame(Frame):
 
         label = Label(self, text='Identify the target and victim who need to be spoofed',
                       font=controller.h2_font)
-        label.pack(side='top', pady=20)
+        label.pack(side='top', pady=15)
 
         label_ip_victim = Label(self, text='Victim IP Address: ').pack()
         self.entry_ip_victim = Entry(self)
@@ -272,7 +276,16 @@ class ARPSpoofFrame(Frame):
         self.button_ARP = Button(self, text="Start ARP Spoofing",
                                  command=lambda: self.start_spoofing(self.entry_ip_victim.get(),
                                                                      self.entry_ip_target.get()))
-        self.button_ARP.pack(pady=10)
+        self.button_ARP.pack(pady=5)
+
+        self.button_reset_config = Button(self, text="Reset Configuration",
+                                          command=lambda: controller.show_frame("LocalNetworkScanFrame", update=True))
+        self.button_reset_config.pack(pady=5)
+
+        self.button_start_injecting_extracting = Button(self, text="Start Injecting and/or Extracting",
+                                                        command=lambda: controller.show_frame("InjectorExtractorFrame"),
+                                                        state=DISABLED)
+        self.button_start_injecting_extracting.pack(pady=5)
 
     def update(self):
         if self.controller.victim is not None:
@@ -288,6 +301,7 @@ class ARPSpoofFrame(Frame):
             self.controller.is_spoofing = True
             self.arp = ArpSpoof(vIP, tIP)
             self.controller.output.update_status('ARP Spoofing ' + vIP + " and " + tIP, append=False)
+            self.button_start_injecting_extracting.configure(state=NORMAL)
             self.arp.start()
         else:
             tkMessageBox.showerror("Specify the target and victim",
@@ -299,6 +313,7 @@ class ARPSpoofFrame(Frame):
                                   command=lambda: self.start_spoofing(self.entry_ip_victim.get(),
                                                                       self.entry_ip_target.get()))
         self.controller.output.update_status("ARP Spoofing thread terminated", append=False)
+        self.button_start_injecting_extracting.configure(state=DISABLED)
         self.controller.is_spoofing = False
         self.arp.keep_alive = False
 
@@ -328,6 +343,14 @@ class ARPSpoofFrame(Frame):
         except socket.error:  # not a valid address
             return False
         return True
+
+
+class InjectorExtractorFrame(Frame):
+
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
+        self.controller = controller
+        self.parent = parent
 
 
 def main():
