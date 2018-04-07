@@ -19,7 +19,7 @@ class AbstractInjector:
 
         # Modify the payload to match the length of the original payload
         if delta < 0:
-            new_payload += "\n" * -delta # Pad with new-lines if the payload is too short
+            new_payload += "\n" * -delta  # Pad with new-lines if the payload is too short
         elif delta > 0:
             # Decrease the payload length by replacing two subsequent whitespaces
             progress = True

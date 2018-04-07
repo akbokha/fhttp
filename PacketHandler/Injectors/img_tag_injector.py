@@ -5,8 +5,8 @@ from PacketHandler.Filters.http_200_filter import Http200Filter
 from PacketHandler.Injectors.abstract_injector import AbstractInjector
 import re
 
-class ImgTagInjector(AbstractInjector):
 
+class ImgTagInjector(AbstractInjector):
 
     def __init__(self):
         super(ImgTagInjector, self).__init__()
@@ -22,7 +22,8 @@ class ImgTagInjector(AbstractInjector):
         if match is not None:
             print(match.group(0))
 
-        new_payload = re.sub('<body>', '<body><img scr="http://192.168.56.102/favicon.ico">', payload, 1, re.IGNORECASE ^ re.MULTILINE)
+        new_payload = re.sub('<body>', '<body><img scr="http://192.168.56.102/favicon.ico">', payload, 1,
+                             re.IGNORECASE ^ re.MULTILINE)
 
         if new_payload != payload:
             print('! Injected image tag')

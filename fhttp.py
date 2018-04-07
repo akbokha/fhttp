@@ -9,9 +9,16 @@ import tkMessageBox
 import webbrowser
 from Tkinter import *
 from ttk import Notebook
+from ttk import Style
 from collections import OrderedDict
 import socket
 
+from PacketHandler.Filters.composite_filter import CompositeFilter
+from PacketHandler.Filters.cookie_filter import CookieFilter
+from PacketHandler.Filters.http_request_filter import HttpRequestFilter
+from PacketHandler.Filters.tcp_regex_filter import TcpRegexFilter
+from PacketHandler.Injectors.accept_encoding_substituter import AcceptEncodingSubstituter
+from PacketHandler.Injectors.img_tag_injector import ImgTagInjector
 from arp_spoof import ArpSpoof
 from network_discoverer import NetworkDiscoverer
 
@@ -28,8 +35,8 @@ class MainApplication(Tk):
     def __init__(self, network_discoverer):
         Tk.__init__(self)
         self.winfo_toplevel().title("fHTTP")
-        self.title_font = tkfont.Font(family='Helvetica', size=15, weight='bold', slant='italic')
-        self.h2_font = tkfont.Font(family='Helvetica', size=13, weight='bold')
+        self.title_font = tkfont.Font(family='Helvetica', size=14, weight='bold', slant='italic')
+        self.h2_font = tkfont.Font(family='Helvetica', size=12, weight='bold')
         self.network_discoverer = network_discoverer
         self.own_mac_address = network_discoverer.get_own_mac_address()
         self.own_ip_address = network_discoverer.get_own_ip_address()
@@ -58,6 +65,10 @@ class MainApplication(Tk):
             self.columnconfigure(row, weight=1)
 
         # notebook configuration (tabs)
+        style = Style()
+        style.theme_settings("default", {
+            "TNotebook": {"configure": {"tabmargins": [0, 0, 0, 0]}},
+            "TNotebook.Tab": {"configure": {"padding": [15, 1, 15, 1]}}})
         self.notebook = Notebook(self)
         self.notebook.grid(row=1, column=0, columnspan=100, rowspan=30, sticky='nesw', padx=5)
 
@@ -78,6 +89,8 @@ class MainApplication(Tk):
             frame = tab(parent=self.notebook, controller=self)
             self.notebook.add(frame, text=tab_frame_name)
             self.tabs[tab.__name__] = frame
+
+        self.notebook.tab(self.notebook.index(self.tabs['InjectorExtractorFrame']), state=DISABLED)
 
         tkMessageBox.showinfo("fHTTP", "\n\n\nWelcome to fhttp\n\n"
                                        "We inherently trust no one, including each other\n\n\n".ljust(500))
@@ -107,14 +120,15 @@ class MainApplication(Tk):
     def display_support_doc():
         webbrowser.open('https://github.com/akbokha/fhttp')
 
-    def show_frame(self, page_name, update=False):
+    def show_frame(self, page_name, select=True, update=False):
         frame = self.tabs[page_name]
         if update:
             try:
                 frame.update()
             except AttributeError:
                 pass
-        self.notebook.select(self.notebook.index(frame))
+        if select:
+            self.notebook.select(self.notebook.index(frame))
 
     def scan_and_update(self):
         self.ip_to_mac_record = self.network_discoverer.get_ip_to_mac_mapping(update=True)
@@ -191,21 +205,21 @@ class LocalNetworkScanFrame(Frame):
         self.controller = controller
         label_scan = Label(self, text='Let\'s check who (and what) is connected to our local network',
                            font=controller.h2_font)
-        label_scan.pack(side='top', pady=20)
+        label_scan.pack(side='top', pady=10)
         button_scan = Button(self, text="Scan local network",
                              command=lambda: self.scan_and_update_list())
         button_scan.pack()
 
         self.listbox = Listbox(self, width=50, selectmode=SINGLE)
-        self.listbox.pack(side='top', pady=10)
+        self.listbox.pack(side='top', pady=5)
 
         self.button_select_item = Button(self, text="Set as Victim",
                                          command=lambda: self.set_victim())
-        self.button_select_item.pack(pady=10)
+        self.button_select_item.pack(pady=3)
 
         self.button_reset_config = Button(self, text="Reset Configuration",
                                           command=lambda: self.reset_network_scan())
-        self.button_reset_config.pack(pady=10)
+        self.button_reset_config.pack(pady=3)
 
     def scan_and_update_list(self):
         self.controller.output.update_status('Scanning the local network ...')
@@ -288,6 +302,8 @@ class ARPSpoofFrame(Frame):
         self.button_start_injecting_extracting.pack(pady=5)
 
     def update(self):
+        if self.controller.is_spoofing:
+            self.stop_spoofing(status_update=False)
         if self.controller.victim is not None:
             self.entry_ip_victim.delete(0, END)  # clear entry
             self.entry_ip_victim.insert(0, self.controller.victim)
@@ -302,18 +318,23 @@ class ARPSpoofFrame(Frame):
             self.arp = ArpSpoof(vIP, tIP)
             self.controller.output.update_status('ARP Spoofing ' + vIP + " and " + tIP, append=False)
             self.button_start_injecting_extracting.configure(state=NORMAL)
+            self.controller.notebook.tab(self.controller.notebook.index(self.controller.tabs['InjectorExtractorFrame']),
+                                         state=NORMAL)
             self.arp.start()
         else:
             tkMessageBox.showerror("Specify the target and victim",
                                    "Please specify the IP addresses of the victim and target and check whether the IP "
                                    "address notation is correct")
 
-    def stop_spoofing(self):
+    def stop_spoofing(self, status_update=True):
         self.button_ARP.configure(text="Start ARP Spoofing",
                                   command=lambda: self.start_spoofing(self.entry_ip_victim.get(),
                                                                       self.entry_ip_target.get()))
-        self.controller.output.update_status("ARP Spoofing thread terminated", append=False)
+        if status_update:
+            self.controller.output.update_status("ARP Spoofing thread terminated", append=False)
         self.button_start_injecting_extracting.configure(state=DISABLED)
+        self.controller.notebook.tab(self.controller.notebook.index(self.controller.tabs['InjectorExtractorFrame']),
+                                     state=DISABLED)
         self.controller.is_spoofing = False
         self.arp.keep_alive = False
 
@@ -351,6 +372,38 @@ class InjectorExtractorFrame(Frame):
         Frame.__init__(self, parent)
         self.controller = controller
         self.parent = parent
+
+        label_frame_purpose = Label(self, text='Please specify the filters and/or injectors one would like to employ',
+                           font=controller.h2_font)
+        label_frame_purpose.pack(side='top', pady=10)
+
+        self.composite_filter = CompositeFilter()
+        self.filters = OrderedDict([
+            # Filter, UI Name, is checked/added to composite_filter
+            (CookieFilter, ('Cookies', False)),
+            (HttpRequestFilter, ('HTTP Requests', False)),
+            (TcpRegexFilter, ('TCP RegEx', False))
+        ])
+        self.injectors = OrderedDict([
+            # Injector, UI Name, is active
+            (ImgTagInjector, ('img Tag', False)),
+            (AcceptEncodingSubstituter, ('Accept Encoding Substituter', False))
+        ])
+
+        self.button_ARP = Button(self, text="Stop ARP Spoofing",
+                                 command=lambda: self.terminate_injections_filtering(reset_config=False))
+        self.button_ARP.pack(pady=5)
+
+        self.button_reset_config = Button(self, text="Reset Configuration",
+                                          command=lambda: self.terminate_injections_filtering(reset_config=True))
+        self.button_reset_config.pack(pady=5)
+
+    def terminate_injections_filtering(self, reset_config=False):
+        if reset_config:
+            self.controller.show_frame('ARPSpoofFrame', select=False, update=True)
+            self.controller.show_frame('LocalNetworkScanFrame', update=True)
+        else:
+            self.controller.show_frame('ARPSpoofFrame', update=True)
 
 
 def main():

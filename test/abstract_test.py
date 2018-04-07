@@ -4,6 +4,7 @@ from ip_to_mac_mapper import IpToMacMapper
 
 from abc import ABCMeta
 
+
 class AbstractTest(unittest.TestCase):
     __metaclass__ = ABCMeta
 
