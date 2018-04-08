@@ -6,6 +6,7 @@ from ip_to_mac_mapper import IpToMacMapper
 mapping = IpToMacMapper().set_all({
     '192.168.56.101': '08:00:27:B0:A1:AB',
     '192.168.56.102': '08:00:27:C6:A4:61',
+    '192.168.56.104': '08:00:27:67:EA:43',
 })
 
 packet_sniffer = PacketSniffer(['192.168.56.103'], mapping, 'enp0s3')

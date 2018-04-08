@@ -315,7 +315,9 @@ class ARPSpoofFrame(Frame):
         if ARPSpoofFrame.is_valid_ip_address(vIP) and ARPSpoofFrame.is_valid_ip_address(tIP):
             self.button_ARP.configure(text="Stop ARP Spoofing", command=lambda: self.stop_spoofing())
             self.controller.is_spoofing = True
-            self.arp = ArpSpoof(vIP, tIP)
+            self.arp = ArpSpoof()
+            self.arp.attach(vIP)
+            self.arp.attach(tIP)
             self.controller.output.update_status('ARP Spoofing ' + vIP + " and " + tIP, append=False)
             self.button_start_injecting_extracting.configure(state=NORMAL)
             self.controller.notebook.tab(self.controller.notebook.index(self.controller.tabs['InjectorExtractorFrame']),

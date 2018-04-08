@@ -22,7 +22,7 @@ class ImgTagInjector(AbstractInjector):
         if match is not None:
             print(match.group(0))
 
-        new_payload = re.sub('<body>', '<body><img scr="http://192.168.56.102/favicon.ico">', payload, 1,
+        new_payload = re.sub('<body>', '<body><img scr="http://192.168.56.104/favicon.ico">', payload, 1,
                              re.IGNORECASE ^ re.MULTILINE)
 
         if new_payload != payload:
