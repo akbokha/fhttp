@@ -46,7 +46,7 @@ class MainApplication(Tk):
 
         self.is_spoofing = self.is_extracting = self.is_filtering = False
 
-        self.victim = None
+        self.victims = None
         self.target = None
 
         width = int(self.winfo_screenwidth() / 1.5)
@@ -68,7 +68,7 @@ class MainApplication(Tk):
         style = Style()
         style.theme_settings("default", {
             "TNotebook": {"configure": {"tabmargins": [0, 0, 0, 0]}},
-            "TNotebook.Tab": {"configure": {"padding": [15, 1, 15, 1]}}})
+            "TNotebook.Tab": {"configure": {"padding": [8, 1, 8, 1]}}})
         self.notebook = Notebook(self)
         self.notebook.grid(row=1, column=0, columnspan=100, rowspan=30, sticky='nesw', padx=5)
 
@@ -210,10 +210,10 @@ class LocalNetworkScanFrame(Frame):
                              command=lambda: self.scan_and_update_list())
         button_scan.pack()
 
-        self.listbox = Listbox(self, width=50, selectmode=SINGLE)
+        self.listbox = Listbox(self, width=50, selectmode=MULTIPLE)
         self.listbox.pack(side='top', pady=5)
 
-        self.button_select_item = Button(self, text="Set as Victim",
+        self.button_select_item = Button(self, text="Set as Victim(s)",
                                          command=lambda: self.set_victim())
         self.button_select_item.pack(pady=3)
 
@@ -230,12 +230,19 @@ class LocalNetworkScanFrame(Frame):
             self.listbox.insert(END, (item + " - " + self.controller.ip_to_mac[item]))
 
     def set_victim(self):
+        self.listbox.configure(selectmode=SINGLE) # allow the specification of a single target only
         list_items = self.listbox.curselection()
         list_items = [int(item) for item in list_items]
-        if len(list_items) > 0:  # an item is selected
-            self.controller.victim = self.get_ip_address(str(self.listbox.get(list_items[0])))
+        num_items = len(list_items)
+        if num_items > 0:  # an item is selected
+            self.controller.victims = []
+            self.controller.victims.append(self.get_ip_address(str(self.listbox.get(list_items[0]))))
+            self.controller.output.update_status("Victim: " + self.controller.victims[0], append=False)
+            if num_items > 1:  # multiple items
+                for i in range(1, num_items):
+                    self.controller.victims.append(self.get_ip_address(str(self.listbox.get(list_items[i]))))
+                    self.controller.output.update_status(", Victim: " + self.controller.victims[i], append=True)
             self.listbox.selection_clear(0, END)
-            self.controller.output.update_status("Victim: " + self.controller.victim, append=False)
             self.button_select_item.configure(text="Set as Target", command=lambda: self.set_target())
 
     def set_target(self):
@@ -249,12 +256,14 @@ class LocalNetworkScanFrame(Frame):
                                               command=lambda: self.start_spoofing())
 
     def start_spoofing(self):
+        self.listbox.configure(selectmode=MULTIPLE)
         self.button_select_item.configure(text="Set as Victim",
                                           command=lambda: self.set_victim())
         self.controller.show_frame("ARPSpoofFrame", update=True)
 
     def reset_network_scan(self):
         self.listbox.delete(0, END)  # clear entries
+        self.listbox.configure(selectmode=MULTIPLE)
         self.button_select_item.configure(text="Set as Victim", command=lambda: self.set_victim())
         self.controller.output.update_status(self.controller.output.no_status, append=False)
 
@@ -279,12 +288,12 @@ class ARPSpoofFrame(Frame):
                       font=controller.h2_font)
         label.pack(side='top', pady=15)
 
-        label_ip_victim = Label(self, text='Victim IP Address: ').pack()
-        self.entry_ip_victim = Entry(self)
+        label_ip_victim = Label(self, text="Victim(s) IP Address (sep =','): ").pack()
+        self.entry_ip_victim = Entry(self, width=35)
         self.entry_ip_victim.pack()
 
         label_ip_target = Label(self, text='Target IP Address: ').pack()
-        self.entry_ip_target = Entry(self)
+        self.entry_ip_target = Entry(self, width=35)
         self.entry_ip_target.pack()
 
         self.button_ARP = Button(self, text="Start ARP Spoofing",
@@ -304,19 +313,25 @@ class ARPSpoofFrame(Frame):
     def update(self):
         if self.controller.is_spoofing:
             self.stop_spoofing(status_update=False)
-        if self.controller.victim is not None:
+        if self.controller.victims is not None:
             self.entry_ip_victim.delete(0, END)  # clear entry
-            self.entry_ip_victim.insert(0, self.controller.victim)
+            num_items = len(self.controller.victims)
+            self.entry_ip_victim.insert(0, self.controller.victims[0])
+            if num_items > 1:
+                for i in range(1, num_items):
+                    self.entry_ip_victim.insert(END, ", ".__add__(self.controller.victims[i]))
         if self.controller.target is not None:
             self.entry_ip_target.delete(0, END)
             self.entry_ip_target.insert(0, self.controller.target)
 
     def start_spoofing(self, vIP, tIP):
-        if ARPSpoofFrame.is_valid_ip_address(vIP) and ARPSpoofFrame.is_valid_ip_address(tIP):
+        victims = [vic.strip() for vic in vIP.split(',')]
+        if ARPSpoofFrame.are_valid_ip_address(victims) and ARPSpoofFrame.are_valid_ip_address([tIP]):
             self.button_ARP.configure(text="Stop ARP Spoofing", command=lambda: self.stop_spoofing())
             self.controller.is_spoofing = True
             self.arp = ArpSpoof()
-            self.arp.attach(vIP)
+            for vic in victims:
+                self.arp.attach(vic)
             self.arp.attach(tIP)
             self.controller.output.update_status('ARP Spoofing ' + vIP + " and " + tIP, append=False)
             self.button_start_injecting_extracting.configure(state=NORMAL)
@@ -341,8 +356,11 @@ class ARPSpoofFrame(Frame):
         self.arp.keep_alive = False
 
     @staticmethod
-    def is_valid_ip_address(address):
-        return ARPSpoofFrame.is_valid_ipv4_address(address) or ARPSpoofFrame.is_valid_ipv6_address(address)
+    def are_valid_ip_address(addresses):
+        for add in addresses:
+            if not (ARPSpoofFrame.is_valid_ipv4_address(add) or ARPSpoofFrame.is_valid_ipv6_address(add)):
+                return False
+        return True
 
     # Copied from tzot's answer - https://stackoverflow.com/questions/319279/how-to-validate-ip-address-in-python
     @staticmethod
