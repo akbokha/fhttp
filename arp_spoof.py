@@ -3,9 +3,10 @@
 import threading
 from time import sleep
 
-from network_discoverer import NetworkDiscoverer
 from scapy.all import *
 from scapy.layers.l2 import ARP, Ether
+
+from network_discoverer import NetworkDiscoverer
 
 
 class ArpSpoof(threading.Thread):

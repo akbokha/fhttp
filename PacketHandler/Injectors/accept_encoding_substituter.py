@@ -1,6 +1,6 @@
 import re
 
-from scapy.layers.inet import TCP, IP
+from scapy.layers.inet import TCP
 from scapy.layers.l2 import Ether
 
 from PacketHandler.Filters.http_request_filter import HttpRequestFilter
