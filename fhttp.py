@@ -147,6 +147,7 @@ class OutputFrame(Frame):
         self.configure(bg='black')
         self.no_status = 'no status to display'
         self.status_text = self.no_status
+        self.pack_propagate(False)  # do not let it expand
         self.status_message = Message(self, anchor=W, width=1200, text=self.status.__add__(self.status_text))
         self.status_message.config(bg='black', foreground='white')
         self.status_message.pack(side=TOP, anchor=W, fill=X)
@@ -173,7 +174,7 @@ class OutputFrame(Frame):
                 self.output_text += message
             else:
                 self.output_text = message
-            self.output_message = self.output_message.configure(text=self.output.__add__(self.output_text))
+            self.output_message.configure(text=self.output.__add__(self.output_text))
             self.update()
         else:  # to-do: figure out how to handle list/collection of strings in an elegant way
             pass

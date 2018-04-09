@@ -39,7 +39,8 @@ class PacketSniffer(threading.Thread):
         as_string = self.packet_filter.to_string(packet)
         if as_string is not None:
             if self.output_frame is not None:
-                pass # to do: fix output
+                update = "\n" + as_string + "\n"
+                self.output_frame.update_output(update, append=True)
             else:
                 print("vvvvvvvvvvvvvvvvvvvvvv")
                 print(as_string)
@@ -56,7 +57,8 @@ class PacketSniffer(threading.Thread):
             target_dst = self._ip_to_mac.get(ip.dst)
             if target_dst is None:
                 if self.output_frame is not None:
-                    pass  # to do: fix output
+                    status = '\nreceived a packet for an unknown host (%s)\n' % ip.dst
+                    self.output_frame.update_output(status, append=True)
                 else:
                     print('received a packet for an unknown host (%s)' % ip.dst)
                 return
@@ -72,7 +74,8 @@ class PacketSniffer(threading.Thread):
                         packet = result
 
                 if self.output_frame is not None:
-                    pass  # to do: fix output
+                    status = '\nredirecting a packet from %s (%s) to %s\n' % (packet.dst, ip.dst, target_dst)
+                    self.output_frame.update_output(status, append=True)
                 else:
                     print('redirecting a packet from %s (%s) to %s' % (packet.dst, ip.dst, target_dst))
                 packet.dst = target_dst
