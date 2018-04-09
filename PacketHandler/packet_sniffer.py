@@ -10,7 +10,7 @@ from scapy import config
 
 class PacketSniffer(threading.Thread):
 
-    def __init__(self, attacker_ips, ip_to_mac, output_frame=None, network_interface=config.conf.iface):
+    def __init__(self, attacker_ips, ip_to_mac, network_interface=config.conf.iface, output_frame=None):
         # type: (list, IpToMacMapper, str) -> self
         super(PacketSniffer, self).__init__()
         self._network_interface = network_interface
@@ -18,7 +18,6 @@ class PacketSniffer(threading.Thread):
         self._ip_to_mac = ip_to_mac
         self.output_frame = output_frame
 
-        self._stored_packets = []
         self.packet_filter = CompositeFilter()
         self.packet_injectors = []
 
@@ -28,9 +27,6 @@ class PacketSniffer(threading.Thread):
             store=0,
             prn=self._handle_packet
         )
-
-    def get_stored_packets(self):
-        return self._stored_packets
 
     def _handle_packet(self, packet):
         # type: (Ether) -> None
