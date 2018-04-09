@@ -19,6 +19,7 @@ from PacketHandler.Filters.http_request_filter import HttpRequestFilter
 from PacketHandler.Filters.tcp_regex_filter import TcpRegexFilter
 from PacketHandler.Injectors.accept_encoding_substituter import AcceptEncodingSubstituter
 from PacketHandler.Injectors.img_tag_injector import ImgTagInjector
+from PacketHandler.packet_sniffer import PacketSniffer
 from arp_spoof import ArpSpoof
 from network_discoverer import NetworkDiscoverer
 
@@ -37,6 +38,7 @@ class MainApplication(Tk):
         self.winfo_toplevel().title("fHTTP")
         self.title_font = tkfont.Font(family='Helvetica', size=14, weight='bold', slant='italic')
         self.h2_font = tkfont.Font(family='Helvetica', size=12, weight='bold')
+        self.h3_font = tkfont.Font(family='Helvetica', size=11, weight='bold')
         self.network_discoverer = network_discoverer
         self.own_mac_address = network_discoverer.get_own_mac_address()
         self.own_ip_address = network_discoverer.get_own_ip_address()
@@ -230,7 +232,7 @@ class LocalNetworkScanFrame(Frame):
             self.listbox.insert(END, (item + " - " + self.controller.ip_to_mac[item]))
 
     def set_victim(self):
-        self.listbox.configure(selectmode=SINGLE) # allow the specification of a single target only
+        self.listbox.configure(selectmode=SINGLE)  # allow the specification of a single target only
         list_items = self.listbox.curselection()
         list_items = [int(item) for item in list_items]
         num_items = len(list_items)
@@ -306,7 +308,8 @@ class ARPSpoofFrame(Frame):
         self.button_reset_config.pack(pady=5)
 
         self.button_start_injecting_extracting = Button(self, text="Start Injecting and/or Extracting",
-                                                        command=lambda: controller.show_frame("InjectorExtractorFrame"),
+                                                        command=lambda: controller.show_frame("InjectorExtractorFrame",
+                                                                                              update=True),
                                                         state=DISABLED)
         self.button_start_injecting_extracting.pack(pady=5)
 
@@ -394,21 +397,64 @@ class InjectorExtractorFrame(Frame):
         self.parent = parent
 
         label_frame_purpose = Label(self, text='Please specify the filters and/or injectors one would like to employ',
-                           font=controller.h2_font)
+                                    font=controller.h2_font)
         label_frame_purpose.pack(side='top', pady=10)
 
-        self.composite_filter = CompositeFilter()
-        self.filters = OrderedDict([
-            # Filter, UI Name, is checked/added to composite_filter
-            (CookieFilter, ('Cookies', False)),
-            (HttpRequestFilter, ('HTTP Requests', False)),
-            (TcpRegexFilter, ('TCP RegEx', False))
-        ])
-        self.injectors = OrderedDict([
-            # Injector, UI Name, is active
-            (ImgTagInjector, ('img Tag', False)),
-            (AcceptEncodingSubstituter, ('Accept Encoding Substituter', False))
-        ])
+        self.packet_sniffer = None
+
+        self.filters = {}
+        self.injectors = {}
+
+        self.cookie_filter = CookieFilter()
+        self.http_request_filter = HttpRequestFilter()
+        self.tcp_reg_ex_filter = None  # TcpRegexFilter()
+
+        self.image_injector = None  # ImgTagInjector()
+        self.accept_encoding_injector = None  # AcceptEncodingSubstituter()
+
+        label_filters = Label(self, text='Active filters',
+                              font=controller.h3_font)
+        label_filters.pack(pady=2)
+
+        self.cookie_filter_var = IntVar()
+        self.cookie_filter_box = Checkbutton(self, text="Cookies", variable=self.cookie_filter_var, onvalue=1,
+                                             offvalue=0, command=lambda: self.update_filters("Cookies"),
+                                             height=2, width=15)
+        self.cookie_filter_box.pack()
+        self.filters["Cookies"] = (self.cookie_filter, self.cookie_filter_var)
+
+        self.http_request_var = IntVar()
+        self.http_request_filter_box = Checkbutton(self, text="HTTP Request", variable=self.http_request_var, onvalue=1,
+                                                   offvalue=0, command=lambda: self.update_filters("HTTP Request"),
+                                                   height=2, width=15)
+        self.http_request_filter_box.pack()
+        self.filters["HTTP Request"] = (self.http_request_filter, self.http_request_var)
+
+        self.tcp_reg_ex_var = IntVar()
+        self.tcp_reg_ex_filter_box = Checkbutton(self, text="TCP RegEX", variable=self.tcp_reg_ex_var, onvalue=1,
+                                                 offvalue=0, command=lambda: self.update_filters("TCP RegEX"),
+                                                 height=2, width=15)
+        self.tcp_reg_ex_filter_box.pack()
+        self.filters["TCP RegEX"] = (self.tcp_reg_ex_filter, self.tcp_reg_ex_var)
+
+        self.label_injectors = Label(self, text='Active injectors',
+                                     font=controller.h3_font)
+        self.label_injectors.pack(side='top', pady=2)
+
+        self.img_tag_inj_var = IntVar()
+        self.img_tag_inj_box = Checkbutton(self, text="IMG-tag Injector", variable=self.img_tag_inj_var, onvalue=1,
+                                           offvalue=0, command=lambda: self.update_injectors("IMG-tag"),
+                                           height=2, width=20)
+        self.img_tag_inj_box.pack()
+        self.injectors["IMG-tag"] = (self.image_injector, self.img_tag_inj_var)
+
+        self.accept_enc_inj_var = IntVar()
+        self.accept_enc_inj_box = Checkbutton(self, text="Accept-Encoding Injector", variable=self.accept_enc_inj_var,
+                                              onvalue=1, command=lambda: self.update_injectors("Accept-Encoding"),
+                                              offvalue=0,
+                                              height=2, width=20)
+        self.accept_enc_inj_box.pack()
+        self.injectors["Accept-Encoding"] = (self.accept_encoding_injector, self.accept_enc_inj_var)
 
         self.button_ARP = Button(self, text="Stop ARP Spoofing",
                                  command=lambda: self.terminate_injections_filtering(reset_config=False))
@@ -424,6 +470,31 @@ class InjectorExtractorFrame(Frame):
             self.controller.show_frame('LocalNetworkScanFrame', update=True)
         else:
             self.controller.show_frame('ARPSpoofFrame', update=True)
+
+    def update_filters(self, filter_name):
+        filter = self.filters[filter_name][0]
+        value = self.filters[filter_name][1]
+        if value.get() == 1:
+            print("turn on ", filter_name)
+            self.packet_sniffer.packet_filter.attach(filter)
+        elif value.get() == 0:
+            print("turn off ", filter_name)
+            self.packet_sniffer.packet_filter.detach(filter)
+
+    def update_injectors(self, injector_name):
+        injector = self.injectors[injector_name][0]
+        value = self.injectors[injector_name][1]
+        if value.get() == 1:
+            print("turn on ", injector_name)
+            self.packet_sniffer.packet_injectors.append(injector)
+        elif value.get() == 0:
+            print("turn off ", injector_name)
+            self.packet_sniffer.packet_injectors.remove(injector)
+
+    def update(self):
+        self.packet_sniffer = PacketSniffer(attacker_ips=[self.controller.own_ip_address],
+                                            ip_to_mac=self.controller.ip_to_mac)
+        self.packet_sniffer.start()
 
 
 def main():

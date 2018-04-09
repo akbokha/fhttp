@@ -5,11 +5,12 @@ from scapy.layers.l2 import Ether, sendp
 
 from PacketHandler.Filters.composite_filter import CompositeFilter
 from ip_to_mac_mapper import IpToMacMapper
+from scapy import config
 
 
 class PacketSniffer(threading.Thread):
 
-    def __init__(self, attacker_ips, ip_to_mac, network_interface):
+    def __init__(self, attacker_ips, ip_to_mac, network_interface=config.conf.iface):
         # type: (list, IpToMacMapper, str) -> self
         super(PacketSniffer, self).__init__()
         self._network_interface = network_interface
