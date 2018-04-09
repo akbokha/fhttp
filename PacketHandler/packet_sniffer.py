@@ -1,11 +1,11 @@
 import threading
 
+from scapy import config
 from scapy.all import sniff
 from scapy.layers.l2 import Ether, sendp
 
 from PacketHandler.Filters.composite_filter import CompositeFilter
 from ip_to_mac_mapper import IpToMacMapper
-from scapy import config
 
 
 class PacketSniffer(threading.Thread):

@@ -4,17 +4,16 @@
 # MIT license
 
 import os
+import socket
 import tkFont as tkfont
 import tkMessageBox
 import webbrowser
 from Tkinter import *
+from collections import OrderedDict
 from tkSimpleDialog import askstring
 from ttk import Notebook
 from ttk import Style
-from collections import OrderedDict
-import socket
 
-from PacketHandler.Filters.composite_filter import CompositeFilter
 from PacketHandler.Filters.cookie_filter import CookieFilter
 from PacketHandler.Filters.http_request_filter import HttpRequestFilter
 from PacketHandler.Filters.tcp_regex_filter import TcpRegexFilter
@@ -512,7 +511,8 @@ class InjectorExtractorFrame(Frame):
         value = self.injectors[injector_name][1]
         if value.get() == 1:
             injection = askstring("Input needed", "Please specify the to be injected string",
-                                  initialvalue=ImgTagInjector.dummy_injection)
+                #initialvalue=@todo add ip of the target here
+            )
             self.image_injector = ImgTagInjector(injection)
             self.injectors[injector_name][0] = self.image_injector
             self.packet_sniffer.packet_injectors.append(self.image_injector)

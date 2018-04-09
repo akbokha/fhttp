@@ -1,8 +1,7 @@
 import unittest
+from abc import ABCMeta
 
 from ip_to_mac_mapper import IpToMacMapper
-
-from abc import ABCMeta
 
 
 class AbstractTest(unittest.TestCase):

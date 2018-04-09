@@ -1,4 +1,5 @@
 import unittest
+
 from network_discoverer import NetworkDiscoverer
 from test.abstract_test import AbstractTest
 

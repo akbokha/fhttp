@@ -1,10 +1,11 @@
 import netifaces as netifaces
 
-from ip_to_mac_mapper import IpToMacMapper
 import scapy.config
+import scapy.layers.l2
 import scapy.route
 from scapy.all import *
-import scapy.layers.l2
+
+from ip_to_mac_mapper import IpToMacMapper
 
 
 class NetworkDiscoverer:
