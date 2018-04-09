@@ -10,12 +10,13 @@ from scapy import config
 
 class PacketSniffer(threading.Thread):
 
-    def __init__(self, attacker_ips, ip_to_mac, network_interface=config.conf.iface):
+    def __init__(self, attacker_ips, ip_to_mac, output_frame=None, network_interface=config.conf.iface):
         # type: (list, IpToMacMapper, str) -> self
         super(PacketSniffer, self).__init__()
         self._network_interface = network_interface
         self._attacker_ips = attacker_ips
         self._ip_to_mac = ip_to_mac
+        self.output_frame = output_frame
 
         self._stored_packets = []
         self.packet_filter = CompositeFilter()
@@ -37,9 +38,12 @@ class PacketSniffer(threading.Thread):
         # Get the string version of all filters
         as_string = self.packet_filter.to_string(packet)
         if as_string is not None:
-            print("vvvvvvvvvvvvvvvvvvvvvv")
-            print(as_string)
-            print("^^^^^^^^^^^^^^^^^^^^^^")
+            if self.output_frame is not None:
+                pass # to do: fix output
+            else:
+                print("vvvvvvvvvvvvvvvvvvvvvv")
+                print(as_string)
+                print("^^^^^^^^^^^^^^^^^^^^^^")
 
         # Only consider packets with an IP part.
         ip = packet.getlayer('IP')
@@ -51,7 +55,10 @@ class PacketSniffer(threading.Thread):
             # Try to lookup the actual mac address of the package
             target_dst = self._ip_to_mac.get(ip.dst)
             if target_dst is None:
-                print('received a packet for an unknown host (%s)' % ip.dst)
+                if self.output_frame is not None:
+                    pass  # to do: fix output
+                else:
+                    print('received a packet for an unknown host (%s)' % ip.dst)
                 return
 
             # Ignore packets which are already targeted correctly, since either we generated
@@ -64,6 +71,9 @@ class PacketSniffer(threading.Thread):
                     if result is not None:
                         packet = result
 
-                print('redirecting a packet from %s (%s) to %s' % (packet.dst, ip.dst, target_dst))
+                if self.output_frame is not None:
+                    pass  # to do: fix output
+                else:
+                    print('redirecting a packet from %s (%s) to %s' % (packet.dst, ip.dst, target_dst))
                 packet.dst = target_dst
                 sendp(packet)

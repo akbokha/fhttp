@@ -8,6 +8,7 @@ import tkFont as tkfont
 import tkMessageBox
 import webbrowser
 from Tkinter import *
+from tkSimpleDialog import askstring
 from ttk import Notebook
 from ttk import Style
 from collections import OrderedDict
@@ -421,21 +422,22 @@ class InjectorExtractorFrame(Frame):
                                              offvalue=0, command=lambda: self.update_filters("Cookies"),
                                              height=2, width=15)
         self.cookie_filter_box.pack()
-        self.filters["Cookies"] = (self.cookie_filter, self.cookie_filter_var)
+        self.filters["Cookies"] = [self.cookie_filter, self.cookie_filter_var]
 
         self.http_request_var = IntVar()
         self.http_request_filter_box = Checkbutton(self, text="HTTP Request", variable=self.http_request_var, onvalue=1,
                                                    offvalue=0, command=lambda: self.update_filters("HTTP Request"),
                                                    height=2, width=15)
         self.http_request_filter_box.pack()
-        self.filters["HTTP Request"] = (self.http_request_filter, self.http_request_var)
+        self.filters["HTTP Request"] = [self.http_request_filter, self.http_request_var]
 
         self.tcp_reg_ex_var = IntVar()
-        self.tcp_reg_ex_filter_box = Checkbutton(self, text="TCP RegEX", variable=self.tcp_reg_ex_var, onvalue=1,
-                                                 offvalue=0, command=lambda: self.update_filters("TCP RegEX"),
+        self.tcp_reg_ex_filter_box = Checkbutton(self, text="TCP RegEX (Advanced Users)", variable=self.tcp_reg_ex_var,
+                                                 onvalue=1,
+                                                 offvalue=0, command=lambda: self.update_tcp_reg_ex("TCP RegEX"),
                                                  height=2, width=15)
         self.tcp_reg_ex_filter_box.pack()
-        self.filters["TCP RegEX"] = (self.tcp_reg_ex_filter, self.tcp_reg_ex_var)
+        self.filters["TCP RegEX"] = [self.tcp_reg_ex_filter, self.tcp_reg_ex_var]
 
         self.label_injectors = Label(self, text='Active injectors',
                                      font=controller.h3_font)
@@ -443,18 +445,18 @@ class InjectorExtractorFrame(Frame):
 
         self.img_tag_inj_var = IntVar()
         self.img_tag_inj_box = Checkbutton(self, text="IMG-tag Injector", variable=self.img_tag_inj_var, onvalue=1,
-                                           offvalue=0, command=lambda: self.update_injectors("IMG-tag"),
+                                           offvalue=0, command=lambda: self.update_img_tag_injector("IMG-tag"),
                                            height=2, width=20)
         self.img_tag_inj_box.pack()
-        self.injectors["IMG-tag"] = (self.image_injector, self.img_tag_inj_var)
+        self.injectors["IMG-tag"] = [self.image_injector, self.img_tag_inj_var]
 
         self.accept_enc_inj_var = IntVar()
         self.accept_enc_inj_box = Checkbutton(self, text="Accept-Encoding Injector", variable=self.accept_enc_inj_var,
-                                              onvalue=1, command=lambda: self.update_injectors("Accept-Encoding"),
+                                              onvalue=1, command=lambda: self.update_accept_encoding("Accept-Encoding"),
                                               offvalue=0,
                                               height=2, width=20)
         self.accept_enc_inj_box.pack()
-        self.injectors["Accept-Encoding"] = (self.accept_encoding_injector, self.accept_enc_inj_var)
+        self.injectors["Accept-Encoding"] = [self.accept_encoding_injector, self.accept_enc_inj_var]
 
         self.button_ARP = Button(self, text="Stop ARP Spoofing",
                                  command=lambda: self.terminate_injections_filtering(reset_config=False))
@@ -491,9 +493,52 @@ class InjectorExtractorFrame(Frame):
             print("turn off ", injector_name)
             self.packet_sniffer.packet_injectors.remove(injector)
 
+    def update_tcp_reg_ex(self, filter_name):
+        filter = self.filters[filter_name][0]
+        value = self.filters[filter_name][1]
+        if value.get() == 1:
+            regex = askstring("Input needed", "Please specify the regular expression")
+            self.tcp_reg_ex_filter = TcpRegexFilter(regex)
+            self.filters[filter_name][0] = self.tcp_reg_ex_filter
+            self.packet_sniffer.packet_filter.attach(filter)
+            print("turn off ", filter_name, " input: ", regex)
+        elif value.get() == 0:
+            print("turn off ", filter_name)
+            self.packet_sniffer.packet_filter.detach(filter)
+
+    def update_img_tag_injector(self, injector_name):
+        injector = self.injectors[injector_name][0]
+        value = self.injectors[injector_name][1]
+        if value.get() == 1:
+            injection = askstring("Input needed", "Please specify the to be injected string",
+                                  initialvalue=ImgTagInjector.dummy_injection)
+            self.image_injector = ImgTagInjector(injection)
+            self.injectors[injector_name][0] = self.image_injector
+            self.packet_sniffer.packet_injectors.append(self.image_injector)
+            print("turn off ", injector_name, " input: ", injection)
+        elif value.get() == 0:
+            print("turn off ", injector_name)
+            self.packet_sniffer.packet_injectors.remove(injector)
+
+    def update_accept_encoding(self, injector_name):
+        injector = self.injectors[injector_name][0]
+        value = self.injectors[injector_name][1]
+        if value.get() == 1:
+            injection = askstring("Input needed", "Please specify the accepted encoding",
+                                  initialvalue=AcceptEncodingSubstituter.no_compression_string)
+            self.accept_encoding_injector = AcceptEncodingSubstituter(injection)
+            self.injectors[injector_name][0] = self.accept_encoding_injector
+            self.packet_sniffer.packet_injectors.append(self.accept_encoding_injector)
+            print("turn off ", injector_name, " input: ", injection)
+        elif value.get() == 0:
+            print("turn off ", injector_name)
+            self.packet_sniffer.packet_injectors.remove(injector)
+
     def update(self):
+        print("sniffer specified")
         self.packet_sniffer = PacketSniffer(attacker_ips=[self.controller.own_ip_address],
-                                            ip_to_mac=self.controller.ip_to_mac)
+                                            ip_to_mac=self.controller.ip_to_mac,
+                                            output_frame=self.controller.output)
         self.packet_sniffer.start()
 
 

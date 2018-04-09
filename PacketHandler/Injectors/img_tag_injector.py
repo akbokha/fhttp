@@ -7,10 +7,12 @@ import re
 
 
 class ImgTagInjector(AbstractInjector):
+    dummy_injection = '<body><img scr="http://192.168.56.104/favicon.ico">'
 
-    def __init__(self):
+    def __init__(self, to_be_injected=dummy_injection):
         super(ImgTagInjector, self).__init__()
         self._filter = Http200Filter()
+        self._to_be_injected_string = to_be_injected
 
     def inject(self, packet):
         # type: (Ether) -> Ether or None
@@ -22,7 +24,7 @@ class ImgTagInjector(AbstractInjector):
         if match is not None:
             print(match.group(0))
 
-        new_payload = re.sub('<body>', '<body><img scr="http://192.168.56.104/favicon.ico">', payload, 1,
+        new_payload = re.sub('<body>', self._to_be_injected_string, payload, 1,
                              re.IGNORECASE ^ re.MULTILINE)
 
         if new_payload != payload:
