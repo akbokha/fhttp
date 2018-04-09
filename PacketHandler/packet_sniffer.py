@@ -49,8 +49,8 @@ class PacketSniffer(threading.Thread):
         # Only consider packets with an IP part.
         ip = packet.getlayer('IP')
         if ip is not None:
-            # Do not relay packets for ourselves
-            if ip.dst in self._attacker_ips:
+            # Do not relay packets for or from ourselves
+            if ip.dst in self._attacker_ips or ip.src in self._attacker_ips:
                 return
 
             # Try to lookup the actual mac address of the package
