@@ -47,6 +47,7 @@ class MainApplication(Tk):
         self.configure(background='darkgrey')
 
         self.is_spoofing = self.is_extracting = self.is_filtering = False
+        self.verbose_mode = False  # verbose mode on/of for output frame
 
         self.victims = None
         self.target = None
@@ -539,7 +540,8 @@ class InjectorExtractorFrame(Frame):
         print("sniffer specified")
         self.packet_sniffer = PacketSniffer(attacker_ips=[self.controller.own_ip_address],
                                             ip_to_mac=self.controller.ip_to_mac,
-                                            output_frame=self.controller.output)
+                                            output_frame=self.controller.output,
+                                            verbose_mode=self.controller.verbose_mode)
         self.packet_sniffer.start()
 
 

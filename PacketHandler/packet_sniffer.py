@@ -10,13 +10,14 @@ from ip_to_mac_mapper import IpToMacMapper
 
 class PacketSniffer(threading.Thread):
 
-    def __init__(self, attacker_ips, ip_to_mac, network_interface=config.conf.iface, output_frame=None):
+    def __init__(self, attacker_ips, ip_to_mac, network_interface=config.conf.iface, output_frame=None, verbose_mode=True):
         # type: (list, IpToMacMapper, str) -> self
         super(PacketSniffer, self).__init__()
         self._network_interface = network_interface
         self._attacker_ips = attacker_ips
         self._ip_to_mac = ip_to_mac
         self.output_frame = output_frame
+        self.verbose_mode = verbose_mode
 
         self.packet_filter = CompositeFilter()
         self.packet_injectors = []
@@ -52,7 +53,7 @@ class PacketSniffer(threading.Thread):
             # Try to lookup the actual mac address of the package
             target_dst = self._ip_to_mac.get(ip.dst)
             if target_dst is None:
-                if self.output_frame is not None:
+                if self.output_frame is not None and self.verbose_mode:
                     status = '\nreceived a packet for an unknown host (%s)\n' % ip.dst
                     self.output_frame.update_output(status, append=True)
                 else:
@@ -69,7 +70,7 @@ class PacketSniffer(threading.Thread):
                     if result is not None:
                         packet = result
 
-                if self.output_frame is not None:
+                if self.output_frame is not None and self.verbose_mode:
                     status = '\nredirecting a packet from %s (%s) to %s\n' % (packet.dst, ip.dst, target_dst)
                     self.output_frame.update_output(status, append=True)
                 else:
