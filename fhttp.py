@@ -421,14 +421,14 @@ class InjectorExtractorFrame(Frame):
         self.cookie_filter_var = IntVar()
         self.cookie_filter_box = Checkbutton(self, text="Cookies", variable=self.cookie_filter_var, onvalue=1,
                                              offvalue=0, command=lambda: self.update_filters("Cookies"),
-                                             height=2, width=15)
+                                             height=2, width=30)
         self.cookie_filter_box.pack()
         self.filters["Cookies"] = [self.cookie_filter, self.cookie_filter_var]
 
         self.http_request_var = IntVar()
         self.http_request_filter_box = Checkbutton(self, text="HTTP Request", variable=self.http_request_var, onvalue=1,
                                                    offvalue=0, command=lambda: self.update_filters("HTTP Request"),
-                                                   height=2, width=15)
+                                                   height=2, width=30)
         self.http_request_filter_box.pack()
         self.filters["HTTP Request"] = [self.http_request_filter, self.http_request_var]
 
@@ -436,7 +436,7 @@ class InjectorExtractorFrame(Frame):
         self.tcp_reg_ex_filter_box = Checkbutton(self, text="TCP RegEX (Advanced Users)", variable=self.tcp_reg_ex_var,
                                                  onvalue=1,
                                                  offvalue=0, command=lambda: self.update_tcp_reg_ex("TCP RegEX"),
-                                                 height=2, width=15)
+                                                 height=2, width=30)
         self.tcp_reg_ex_filter_box.pack()
         self.filters["TCP RegEX"] = [self.tcp_reg_ex_filter, self.tcp_reg_ex_var]
 
@@ -445,17 +445,17 @@ class InjectorExtractorFrame(Frame):
         self.label_injectors.pack(side='top', pady=2)
 
         self.img_tag_inj_var = IntVar()
-        self.img_tag_inj_box = Checkbutton(self, text="IMG-tag Injector", variable=self.img_tag_inj_var, onvalue=1,
+        self.img_tag_inj_box = Checkbutton(self, text="IMG-tag Injector (Advanced Users)", variable=self.img_tag_inj_var, onvalue=1,
                                            offvalue=0, command=lambda: self.update_img_tag_injector("IMG-tag"),
-                                           height=2, width=20)
+                                           height=2, width=40)
         self.img_tag_inj_box.pack()
         self.injectors["IMG-tag"] = [self.image_injector, self.img_tag_inj_var]
 
         self.accept_enc_inj_var = IntVar()
-        self.accept_enc_inj_box = Checkbutton(self, text="Accept-Encoding Injector", variable=self.accept_enc_inj_var,
+        self.accept_enc_inj_box = Checkbutton(self, text="Accept-Encoding Injector (Advanced Users)", variable=self.accept_enc_inj_var,
                                               onvalue=1, command=lambda: self.update_accept_encoding("Accept-Encoding"),
                                               offvalue=0,
-                                              height=2, width=20)
+                                              height=2, width=40)
         self.accept_enc_inj_box.pack()
         self.injectors["Accept-Encoding"] = [self.accept_encoding_injector, self.accept_enc_inj_var]
 
