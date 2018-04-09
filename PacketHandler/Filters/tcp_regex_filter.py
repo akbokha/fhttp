@@ -14,9 +14,7 @@ class TcpRegexFilter(AbstractFilter):
         if tcp is not None:
             match = re.search(self._query, str(tcp.payload))
 
-            if match is None:
-                return
-            else:
+            if match is not None:
                 return match.group(self._group)
 
         return
