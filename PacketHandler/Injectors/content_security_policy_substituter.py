@@ -19,7 +19,8 @@ class ContentSecurityPolicySubstituter(AbstractInjector):
             return
 
         payload = str(packet[TCP].payload)
-        new_payload = re.sub('\r\n((X-)?Content-Security-Policy)|(X-WebKit-CSP): [^(\r\n)]*', '\r\n', payload, 0, re.IGNORECASE)
+        new_payload = re.sub('\r\n((X-)?Content-Security-Policy)|(X-WebKit-CSP): [^(\r\n)]*', '\r\n', payload, 0,
+                             re.IGNORECASE)
 
         if payload != new_payload:
             return self.replace_packet_tcp_payload(packet, new_payload)

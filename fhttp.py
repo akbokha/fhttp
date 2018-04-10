@@ -472,10 +472,10 @@ class InjectorExtractorFrame(Frame):
 
         self.csp_inj_var = IntVar()
         self.csp_inj_box = Checkbutton(self, text="Remove Content Security Policy header",
-                                              variable=self.csp_inj_var,
-                                              onvalue=1, command=lambda: self.update_injectors("CSP"),
-                                              offvalue=0,
-                                              height=2, width=40)
+                                       variable=self.csp_inj_var,
+                                       onvalue=1, command=lambda: self.update_injectors("CSP"),
+                                       offvalue=0,
+                                       height=2, width=40)
         self.csp_inj_box.pack()
         self.injectors["CSP"] = [self.csp_injector, self.csp_inj_var]
 
@@ -517,42 +517,42 @@ class InjectorExtractorFrame(Frame):
             self.update_filters("Cookies")
 
     def update_filters(self, filter_name):
-        filter = self.filters[filter_name][0]
-        value = self.filters[filter_name][1]
-        if value.get() == 1:
+        filter_type = self.filters[filter_name][0]
+        check_value = self.filters[filter_name][1]
+        if check_value.get() == 1:
             print("turn on ", filter_name)
-            self.packet_sniffer.packet_filter.attach(filter)
-        elif value.get() == 0:
+            self.packet_sniffer.packet_filter.attach(filter_type)
+        elif check_value.get() == 0:
             print("turn off ", filter_name)
-            self.packet_sniffer.packet_filter.detach(filter)
+            self.packet_sniffer.packet_filter.detach(filter_type)
 
     def update_injectors(self, injector_name):
         injector = self.injectors[injector_name][0]
-        value = self.injectors[injector_name][1]
-        if value.get() == 1:
+        check_value = self.injectors[injector_name][1]
+        if check_value.get() == 1:
             print("turn on ", injector_name)
             self.packet_sniffer.packet_injectors.append(injector)
-        elif value.get() == 0:
+        elif check_value.get() == 0:
             print("turn off ", injector_name)
             self.packet_sniffer.packet_injectors.remove(injector)
 
     def update_tcp_reg_ex(self, filter_name):
-        filter = self.filters[filter_name][0]
-        value = self.filters[filter_name][1]
-        if value.get() == 1:
+        filter_type = self.filters[filter_name][0]
+        check_value = self.filters[filter_name][1]
+        if check_value.get() == 1:
             regex = askstring("Input needed", "Please specify the regular expression")
             self.tcp_reg_ex_filter = TcpRegexFilter(regex)
             self.filters[filter_name][0] = self.tcp_reg_ex_filter
-            self.packet_sniffer.packet_filter.attach(filter)
+            self.packet_sniffer.packet_filter.attach(filter_type)
             print("turn off ", filter_name, " input: ", regex)
-        elif value.get() == 0:
+        elif check_value.get() == 0:
             print("turn off ", filter_name)
-            self.packet_sniffer.packet_filter.detach(filter)
+            self.packet_sniffer.packet_filter.detach(filter_type)
 
     def update_img_tag_injector(self, injector_name):
         injector = self.injectors[injector_name][0]
-        value = self.injectors[injector_name][1]
-        if value.get() == 1:
+        check_value = self.injectors[injector_name][1]
+        if check_value.get() == 1:
             injection = askstring("Input needed", "Please specify the to be injected string",
                                   initialvalue=self.controller.target
                                   )
@@ -560,21 +560,21 @@ class InjectorExtractorFrame(Frame):
             self.injectors[injector_name][0] = self.image_injector
             self.packet_sniffer.packet_injectors.append(self.image_injector)
             print("turn off ", injector_name, " input: ", injection)
-        elif value.get() == 0:
+        elif check_value.get() == 0:
             print("turn off ", injector_name)
             self.packet_sniffer.packet_injectors.remove(injector)
 
     def update_accept_encoding(self, injector_name):
         injector = self.injectors[injector_name][0]
-        value = self.injectors[injector_name][1]
-        if value.get() == 1:
+        check_value = self.injectors[injector_name][1]
+        if check_value.get() == 1:
             injection = askstring("Input needed", "Please specify the accepted encoding",
                                   initialvalue=AcceptEncodingSubstituter.no_compression_string)
             self.accept_encoding_injector = AcceptEncodingSubstituter(injection)
             self.injectors[injector_name][0] = self.accept_encoding_injector
             self.packet_sniffer.packet_injectors.append(self.accept_encoding_injector)
             print("turn off ", injector_name, " input: ", injection)
-        elif value.get() == 0:
+        elif check_value.get() == 0:
             print("turn off ", injector_name)
             self.packet_sniffer.packet_injectors.remove(injector)
 

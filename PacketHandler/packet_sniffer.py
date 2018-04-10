@@ -10,7 +10,8 @@ from ip_to_mac_mapper import IpToMacMapper
 
 class PacketSniffer(threading.Thread):
 
-    def __init__(self, attacker_ips, ip_to_mac, network_interface=config.conf.iface, output_frame=None, verbose_mode=True):
+    def __init__(self, attacker_ips, ip_to_mac, network_interface=config.conf.iface, output_frame=None,
+                 verbose_mode=True):
         # type: (list, IpToMacMapper, str) -> self
         super(PacketSniffer, self).__init__()
         self._network_interface = network_interface

@@ -24,8 +24,8 @@ class ImgTagInjector(AbstractInjector):
         if match is not None:
             print(match.group(0))
 
-        new_payload = re.sub('</body>', '<img width="1" height="1" src="http://'+self.target_ip+'/a.gif"></body>', payload, 1,
-                             re.IGNORECASE ^ re.MULTILINE)
+        new_payload = re.sub('</body>', '<img width="1" height="1" src="http://' + self.target_ip + '/a.gif"></body>',
+                             payload, 1, re.IGNORECASE ^ re.MULTILINE)
 
         if new_payload != payload:
             print('! Injected image tag')
