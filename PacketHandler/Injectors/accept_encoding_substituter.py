@@ -21,7 +21,7 @@ class AcceptEncodingSubstituter(AbstractInjector):
             return
 
         payload = str(packet[TCP].payload)
-        new_payload = re.sub('Accept-Encoding: [^(\r\n)]*', self._replacement, payload, 1, re.IGNORECASE)
+        new_payload = re.sub('Accept-Encoding: [^(\r\n)]*', 'Accept-Encoding: ' + self._replacement, payload, 1, re.IGNORECASE)
 
         if payload != new_payload:
             print('! Substituted Accept-Encoding header')
