@@ -8,7 +8,7 @@ from PacketHandler.Injectors.abstract_injector import AbstractInjector
 
 
 class AcceptEncodingSubstituter(AbstractInjector):
-    no_compression_string = "Accept-Encoding: identity"
+    no_compression_string = "identity"
 
     def __init__(self, replacement=no_compression_string):
         super(AcceptEncodingSubstituter, self).__init__()

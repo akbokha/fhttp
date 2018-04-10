@@ -47,15 +47,15 @@ class MainApplication(Tk):
         self.configure(background='darkgrey')
 
         self.is_spoofing = self.is_extracting = self.is_filtering = False
-        self.verbose_mode = False  # verbose mode on/of for output frame
+        self.verbose_mode = False  # verbose mode on/off for output frame
 
         self.victims = None
         self.target = None
 
-        width = int(self.winfo_screenwidth() / 1.5)
-        height = int(self.winfo_screenheight() / 1.5)
-        x_start = int(self.winfo_screenwidth() / 5)
-        y_start = int(self.winfo_screenheight() / 5)
+        width = int(self.winfo_screenwidth() * 0.5)
+        height = int(self.winfo_screenheight() * 0.8)
+        x_start = int(self.winfo_screenwidth() * 0.25)
+        y_start = int(self.winfo_screenheight() * 0.1)
         self.geometry('%dx%d+%d+%d' % (width, height, x_start, y_start))
         self.resizable(0, 0)  # do not feel like dealing with resizable frames
         self.conf_menu_bar()  # configure menu-bar
@@ -73,11 +73,11 @@ class MainApplication(Tk):
             "TNotebook": {"configure": {"tabmargins": [0, 0, 0, 0]}},
             "TNotebook.Tab": {"configure": {"padding": [8, 1, 8, 1]}}})
         self.notebook = Notebook(self)
-        self.notebook.grid(row=1, column=0, columnspan=100, rowspan=30, sticky='nesw', padx=5)
+        self.notebook.grid(row=1, column=0, columnspan=100, rowspan=10, sticky='nesw', padx=5)
 
         # output frame configuration
         self.output = OutputFrame(parent=self)
-        self.output.grid(row=33, column=0, columnspan=100, rowspan=65, sticky='nesw', padx=5)
+        self.output.grid(row=13, column=0, columnspan=100, rowspan=85, sticky='nesw', padx=5)
 
         # notebook frames
         self.tabs = {}
@@ -110,6 +110,10 @@ class MainApplication(Tk):
         menu_bar.add_command(label='Exit', command=self.quit)
         self.config(menu=menu_bar)
 
+    def clean_output_and_attack_frame(self):
+        self.output = OutputFrame(parent=self)
+        self.output.grid(row=13, column=0, columnspan=100, rowspan=85, sticky='nesw', padx=5)
+
     @staticmethod
     def display_about():
         tkMessageBox.showinfo("About",
@@ -138,13 +142,16 @@ class MainApplication(Tk):
         self.ip_to_mac = self.ip_to_mac_record.get_all()
 
 
-class OutputFrame(Frame):
+class OutputFrame(Canvas):
     status = '[status] '
     output = '[output] '
 
     def __init__(self, parent):
-        Frame.__init__(self, parent)
-        self.configure(bg='black')
+        Canvas.__init__(self, parent)
+        scroll = Scrollbar(self, orient=VERTICAL)
+        scroll.pack(side=RIGHT, fill=Y)
+        scroll.config(command=self.yview)
+        self.configure(bg='black', yscrollcommand=scroll.set)
         self.no_status = 'no status to display'
         self.status_text = self.no_status
         self.pack_propagate(False)  # do not let it expand
@@ -191,11 +198,11 @@ class StartFrame(Frame):
         label_welcome = Label(self, text='Welcome to fhttp\n'
                                          'We inherently trust no one, including each other',
                               font=controller.title_font)
-        label_welcome.pack(side='top', pady=10)
+        label_welcome.pack(side='top', pady=20)
 
         self.img_icon = PhotoImage(file=media_dir + os.path.sep + 'fhttp_logo.png')
         img_panel = Label(self, image=self.img_icon)
-        img_panel.pack(side='top', pady=5)
+        img_panel.pack(side='top', pady=10)
 
         button_scan = Button(self, text="Start exploring the local network",
                              command=lambda: controller.show_frame("LocalNetworkScanFrame"))
@@ -207,23 +214,23 @@ class LocalNetworkScanFrame(Frame):
     def __init__(self, parent, controller, reset=FALSE):
         Frame.__init__(self, parent)
         self.controller = controller
-        label_scan = Label(self, text='Let\'s check who (and what) is connected to our local network',
+        label_scan = Label(self, text='Let\'s check who/what is connected to the local network',
                            font=controller.h2_font)
-        label_scan.pack(side='top', pady=10)
+        label_scan.pack(side='top', pady=20)
         button_scan = Button(self, text="Scan local network",
                              command=lambda: self.scan_and_update_list())
         button_scan.pack()
 
         self.listbox = Listbox(self, width=50, selectmode=MULTIPLE)
-        self.listbox.pack(side='top', pady=5)
+        self.listbox.pack(side='top', pady=10)
 
         self.button_select_item = Button(self, text="Set as Victim(s)",
                                          command=lambda: self.set_victim())
-        self.button_select_item.pack(pady=3)
+        self.button_select_item.pack(pady=5)
 
         self.button_reset_config = Button(self, text="Reset Configuration",
                                           command=lambda: self.reset_network_scan())
-        self.button_reset_config.pack(pady=3)
+        self.button_reset_config.pack(pady=5)
 
     def scan_and_update_list(self):
         self.controller.output.update_status('Scanning the local network ...')
@@ -290,30 +297,30 @@ class ARPSpoofFrame(Frame):
 
         label = Label(self, text='Identify the target and victim who need to be spoofed',
                       font=controller.h2_font)
-        label.pack(side='top', pady=15)
+        label.pack(side='top', pady=20)
 
-        label_ip_victim = Label(self, text="Victim(s) IP Address (sep =','): ").pack()
+        label_ip_victim = Label(self, text="Victim(s) IP Address (sep =','): ").pack(pady=5)
         self.entry_ip_victim = Entry(self, width=35)
         self.entry_ip_victim.pack()
 
-        label_ip_target = Label(self, text='Target IP Address: ').pack()
+        label_ip_target = Label(self, text='Target IP Address: ').pack(pady=5)
         self.entry_ip_target = Entry(self, width=35)
         self.entry_ip_target.pack()
 
         self.button_ARP = Button(self, text="Start ARP Spoofing",
                                  command=lambda: self.start_spoofing(self.entry_ip_victim.get(),
                                                                      self.entry_ip_target.get()))
-        self.button_ARP.pack(pady=5)
+        self.button_ARP.pack(pady=10)
 
         self.button_reset_config = Button(self, text="Reset Configuration",
                                           command=lambda: controller.show_frame("LocalNetworkScanFrame", update=True))
-        self.button_reset_config.pack(pady=5)
+        self.button_reset_config.pack(pady=7)
 
         self.button_start_injecting_extracting = Button(self, text="Start Injecting and/or Extracting",
                                                         command=lambda: controller.show_frame("InjectorExtractorFrame",
                                                                                               update=True),
                                                         state=DISABLED)
-        self.button_start_injecting_extracting.pack(pady=5)
+        self.button_start_injecting_extracting.pack(pady=7)
 
     def update(self):
         if self.controller.is_spoofing:
@@ -445,34 +452,55 @@ class InjectorExtractorFrame(Frame):
         self.label_injectors.pack(side='top', pady=2)
 
         self.img_tag_inj_var = IntVar()
-        self.img_tag_inj_box = Checkbutton(self, text="IMG-tag Injector (Advanced Users)", variable=self.img_tag_inj_var, onvalue=1,
+        self.img_tag_inj_box = Checkbutton(self, text="IMG-tag Injector (Advanced Users)",
+                                           variable=self.img_tag_inj_var, onvalue=1,
                                            offvalue=0, command=lambda: self.update_img_tag_injector("IMG-tag"),
                                            height=2, width=40)
         self.img_tag_inj_box.pack()
         self.injectors["IMG-tag"] = [self.image_injector, self.img_tag_inj_var]
 
         self.accept_enc_inj_var = IntVar()
-        self.accept_enc_inj_box = Checkbutton(self, text="Accept-Encoding Injector (Advanced Users)", variable=self.accept_enc_inj_var,
+        self.accept_enc_inj_box = Checkbutton(self, text="Accept-Encoding Injector (Advanced Users)",
+                                              variable=self.accept_enc_inj_var,
                                               onvalue=1, command=lambda: self.update_accept_encoding("Accept-Encoding"),
                                               offvalue=0,
                                               height=2, width=40)
         self.accept_enc_inj_box.pack()
         self.injectors["Accept-Encoding"] = [self.accept_encoding_injector, self.accept_enc_inj_var]
 
-        self.button_ARP = Button(self, text="Stop ARP Spoofing",
+        self.button_ARP = Button(self, text="Stop Spoofing and Attack(s)",
                                  command=lambda: self.terminate_injections_filtering(reset_config=False))
         self.button_ARP.pack(pady=5)
 
-        self.button_reset_config = Button(self, text="Reset Configuration",
+        self.button_reset_config = Button(self, text="Stop and Reset Configuration",
                                           command=lambda: self.terminate_injections_filtering(reset_config=True))
         self.button_reset_config.pack(pady=5)
 
     def terminate_injections_filtering(self, reset_config=False):
         if reset_config:
+            self.controller.clean_output()
+            self.controller.output.update()
+            self.clean_up()
             self.controller.show_frame('ARPSpoofFrame', select=False, update=True)
-            self.controller.show_frame('LocalNetworkScanFrame', update=True)
         else:
             self.controller.show_frame('ARPSpoofFrame', update=True)
+
+    def clean_up(self):
+        if self.accept_enc_inj_var.get() == 1:
+            self.accept_enc_inj_var.set(0)
+            self.update_accept_encoding("Accept-Encoding")
+        if self.img_tag_inj_var.get() == 1:
+            self.img_tag_inj_var.set(0)
+            self.update_img_tag_injector("IMG-tag")
+        if self.tcp_reg_ex_var.get() == 1:
+            self.tcp_reg_ex_var.set(0)
+            self.update_tcp_reg_ex("TCP RegEX")
+        if self.http_request_var.get() == 1:
+            self.http_request_var.set(0)
+            self.update_filters("HTTP Request")
+        if self.cookie_filter_var.get() == 1:
+            self.cookie_filter_var.set(0)
+            self.update_filters("Cookies")
 
     def update_filters(self, filter_name):
         filter = self.filters[filter_name][0]
@@ -512,8 +540,8 @@ class InjectorExtractorFrame(Frame):
         value = self.injectors[injector_name][1]
         if value.get() == 1:
             injection = askstring("Input needed", "Please specify the to be injected string",
-                #initialvalue=@todo add ip of the target here
-            )
+                                  initialvalue=self.controller.target
+                                  )
             self.image_injector = ImgTagInjector(injection)
             self.injectors[injector_name][0] = self.image_injector
             self.packet_sniffer.packet_injectors.append(self.image_injector)
