@@ -18,6 +18,7 @@ from PacketHandler.Filters.cookie_filter import CookieFilter
 from PacketHandler.Filters.http_request_filter import HttpRequestFilter
 from PacketHandler.Filters.tcp_regex_filter import TcpRegexFilter
 from PacketHandler.Injectors.accept_encoding_substituter import AcceptEncodingSubstituter
+from PacketHandler.Injectors.content_security_policy_substituter import ContentSecurityPolicySubstituter
 from PacketHandler.Injectors.img_tag_injector import ImgTagInjector
 from PacketHandler.packet_sniffer import PacketSniffer
 from arp_spoof import ArpSpoof
@@ -420,6 +421,7 @@ class InjectorExtractorFrame(Frame):
 
         self.image_injector = None  # ImgTagInjector()
         self.accept_encoding_injector = None  # AcceptEncodingSubstituter()
+        self.csp_injector = ContentSecurityPolicySubstituter()
 
         label_filters = Label(self, text='Active filters',
                               font=controller.h3_font)
@@ -468,6 +470,15 @@ class InjectorExtractorFrame(Frame):
         self.accept_enc_inj_box.pack()
         self.injectors["Accept-Encoding"] = [self.accept_encoding_injector, self.accept_enc_inj_var]
 
+        self.csp_inj_var = IntVar()
+        self.csp_inj_box = Checkbutton(self, text="Remove Content Security Policy header",
+                                              variable=self.csp_inj_var,
+                                              onvalue=1, command=lambda: self.update_injectors("CSP"),
+                                              offvalue=0,
+                                              height=2, width=40)
+        self.csp_inj_box.pack()
+        self.injectors["CSP"] = [self.csp_injector, self.csp_inj_var]
+
         self.button_ARP = Button(self, text="Stop Spoofing and Attack(s)",
                                  command=lambda: self.terminate_injections_filtering(reset_config=False))
         self.button_ARP.pack(pady=5)
@@ -486,6 +497,9 @@ class InjectorExtractorFrame(Frame):
             self.controller.show_frame('ARPSpoofFrame', update=True)
 
     def clean_up(self):
+        if self.csp_inj_var.get() == 1:
+            self.csp_inj_var.set(0)
+            self.update_injectors("CSP")
         if self.accept_enc_inj_var.get() == 1:
             self.accept_enc_inj_var.set(0)
             self.update_accept_encoding("Accept-Encoding")
