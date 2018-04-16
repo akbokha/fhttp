@@ -4,6 +4,7 @@
 # MIT license
 
 import os
+import re
 import socket
 import tkFont as tkfont
 import tkMessageBox
@@ -13,6 +14,7 @@ from collections import OrderedDict
 from tkSimpleDialog import askstring
 from ttk import Notebook
 from ttk import Style
+from datetime import datetime
 
 from PacketHandler.Filters.cookie_filter import CookieFilter
 from PacketHandler.Filters.http_request_filter import HttpRequestFilter
@@ -95,6 +97,7 @@ class MainApplication(Tk):
             self.tabs[tab.__name__] = frame
 
         self.notebook.tab(self.notebook.index(self.tabs['InjectorExtractorFrame']), state=DISABLED)
+        self.notebook.tab(self.notebook.index(self.tabs['ARPSpoofFrame']), state=DISABLED)
 
         tkMessageBox.showinfo("fHTTP", "\n\n\nWelcome to fhttp\n\n"
                                        "We inherently trust no one, including each other\n\n\n".ljust(500))
@@ -143,16 +146,13 @@ class MainApplication(Tk):
         self.ip_to_mac = self.ip_to_mac_record.get_all()
 
 
-class OutputFrame(Canvas):
+class OutputFrame(Frame):
     status = '[status] '
-    output = '[output] '
+    output = ' [output] '
 
     def __init__(self, parent):
-        Canvas.__init__(self, parent)
-        scroll = Scrollbar(self, orient=VERTICAL)
-        scroll.pack(side=RIGHT, fill=Y)
-        scroll.config(command=self.yview)
-        self.configure(bg='black', yscrollcommand=scroll.set)
+        Frame.__init__(self, parent)
+        self.configure(bg='black')
         self.no_status = 'no status to display'
         self.status_text = self.no_status
         self.pack_propagate(False)  # do not let it expand
@@ -161,9 +161,27 @@ class OutputFrame(Canvas):
         self.status_message.pack(side=TOP, anchor=W, fill=X)
 
         self.output_text = 'no output to display'
-        self.output_message = Message(self, anchor=W, width=1200, text=self.output.__add__(self.output_text))
-        self.output_message.config(bg='black', foreground='white')
-        self.output_message.pack(side=TOP, anchor=W, fill=X)
+        self.output_message = Canvas(self, width=1200)
+        self.output_message.config(bg='black')
+        self.output_message.pack(side=TOP, anchor=W, fill=BOTH, expand=TRUE, padx=1)
+        scrollbar = Scrollbar(self.output_message)
+        scrollbar.pack(side=RIGHT, fill=Y)
+        self.output_listbox = Listbox(self.output_message, yscrollcommand=scrollbar.set, bg='black', foreground='white')
+        self.output_listbox.pack(side=TOP, fill=BOTH, anchor=W, expand=TRUE)
+        self.output_listbox.insert(END, self.get_output_prefix().__add__(self.output_text))
+        # self.output_listbox.configure(state=DISABLED)
+        scrollbar.config(command=self.output_listbox.yview)
+
+    @staticmethod
+    def get_output_prefix():
+        return ' [output ' + str(datetime.now().time().strftime("%H:%M:%S")) + "] "
+
+    @staticmethod
+    def get_input_prefix():
+        return ' [input ' + str(datetime.now().time().strftime("%H:%M:%S")) + "] "
+
+    def insert_empty_line(self):
+        self.output_listbox.insert(END, "")
 
     def update_status(self, message, append=False):
         if type(message) is str:  # single string
@@ -178,14 +196,17 @@ class OutputFrame(Canvas):
 
     def update_output(self, message, append=False):
         if type(message) is str:  # single string
-            if append:
-                self.output_text += message
-            else:
-                self.output_text = message
-            self.output_message.configure(text=self.output.__add__(self.output_text))
+            if not append:
+                self.output_listbox.delete(0, END)  # clear entries
+            self.output_listbox.insert(END, self.get_output_prefix().__add__(re.sub(r'[^a-zA-Z0-9\._-]', ' ', message)))
             self.update()
-        else:  # to-do: figure out how to handle list/collection of strings in an elegant way
-            pass
+
+    def update_input(self, message, append=True):
+        if type(message) is str:  # single string
+            if not append:
+                self.output_listbox.delete(0, END)  # clear entries
+            self.output_listbox.insert(END, self.get_input_prefix().__add__(re.sub(r'[^a-zA-Z0-9\._-]', ' ', message)))
+            self.update()
 
 
 # Start tab frames
@@ -240,6 +261,8 @@ class LocalNetworkScanFrame(Frame):
         self.controller.output.update_status('Local network scan complete')
         for item in self.controller.ip_to_mac.keys():
             self.listbox.insert(END, (item + " - " + self.controller.ip_to_mac[item]))
+        self.controller.notebook.tab(self.controller.notebook.index(self.controller.tabs['ARPSpoofFrame']),
+                                     state=NORMAL)
 
     def set_victim(self):
         self.listbox.configure(selectmode=SINGLE)  # allow the specification of a single target only
@@ -489,12 +512,13 @@ class InjectorExtractorFrame(Frame):
 
     def terminate_injections_filtering(self, reset_config=False):
         if reset_config:
-            self.controller.clean_output()
+            self.controller.clean_output_and_attack_frame()
             self.controller.output.update()
             self.clean_up()
             self.controller.show_frame('ARPSpoofFrame', select=False, update=True)
         else:
             self.controller.show_frame('ARPSpoofFrame', update=True)
+        self.controller.output.update_status("ARP Spoofing thread terminated", append=False)
 
     def clean_up(self):
         if self.csp_inj_var.get() == 1:
@@ -541,8 +565,10 @@ class InjectorExtractorFrame(Frame):
         check_value = self.filters[filter_name][1]
         if check_value.get() == 1:
             regex = askstring("Input needed", "Please specify the regular expression")
+            self.controller.output.update_input("regex: ".__add__(regex), append=True)
             self.tcp_reg_ex_filter = TcpRegexFilter(regex)
             self.filters[filter_name][0] = self.tcp_reg_ex_filter
+            filter_type = self.filters[filter_name][0]
             self.packet_sniffer.packet_filter.attach(filter_type)
             print("turn off ", filter_name, " input: ", regex)
         elif check_value.get() == 0:
@@ -556,6 +582,7 @@ class InjectorExtractorFrame(Frame):
             injection = askstring("Input needed", "Please specify the to be injected string",
                                   initialvalue=self.controller.target
                                   )
+            self.controller.output.update_input("injection: ".__add__(injection), append=True)
             self.image_injector = ImgTagInjector(injection)
             self.injectors[injector_name][0] = self.image_injector
             self.packet_sniffer.packet_injectors.append(self.image_injector)
@@ -570,6 +597,7 @@ class InjectorExtractorFrame(Frame):
         if check_value.get() == 1:
             injection = askstring("Input needed", "Please specify the accepted encoding",
                                   initialvalue=AcceptEncodingSubstituter.no_compression_string)
+            self.controller.output.update_input("injection: ".__add__(injection), append=True)
             self.accept_encoding_injector = AcceptEncodingSubstituter(injection)
             self.injectors[injector_name][0] = self.accept_encoding_injector
             self.packet_sniffer.packet_injectors.append(self.accept_encoding_injector)

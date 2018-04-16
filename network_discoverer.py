@@ -1,3 +1,4 @@
+import errno
 import netifaces as netifaces
 
 import scapy.config
@@ -23,7 +24,8 @@ class NetworkDiscoverer:
             return self._host_mac
         self._host_mac = get_if_hwaddr(iface)
         return self._host_mac
-        # # WARNING: Passing None for the interface optimistically searches through all interfaces, which can lead to unexpected behaviour
+        # WARNING: Passing None for the interface parameter optimistically searches through all interfaces;
+        # --> can lead to unexpected behaviour
         # if iface is None:
         #     ifaces = get_if_list()
         # else:

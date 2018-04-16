@@ -37,8 +37,10 @@ class PacketSniffer(threading.Thread):
         as_string = self.packet_filter.to_string(packet)
         if as_string is not None:
             if self.output_frame is not None:
-                update = "\n" + as_string + "\n"
-                self.output_frame.update_output(update, append=True)
+                update = as_string.splitlines()
+                for update_str in update:
+                    self.output_frame.update_output(update_str, append=True)
+                # self.output_frame.insert_empty_line()
             else:
                 print("vvvvvvvvvvvvvvvvvvvvvv")
                 print(as_string)
