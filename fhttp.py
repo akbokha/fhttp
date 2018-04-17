@@ -292,14 +292,18 @@ class LocalNetworkScanFrame(Frame):
 
     def start_spoofing(self):
         self.listbox.configure(selectmode=MULTIPLE)
-        self.button_select_item.configure(text="Set as Victim",
+        self.button_select_item.configure(text="Set as Victim(s)",
                                           command=lambda: self.set_victim())
-        self.controller.show_frame("ARPSpoofFrame", update=True)
+        self.controller.notebook.tab(self.controller.notebook.index(self.controller.tabs['ARPSpoofFrame']),
+                                     state=NORMAL)
+        self.controller.show_frame("ARPSpoofFrame", select=True, update=True)
 
     def reset_network_scan(self):
         self.listbox.delete(0, END)  # clear entries
         self.listbox.configure(selectmode=MULTIPLE)
-        self.button_select_item.configure(text="Set as Victim", command=lambda: self.set_victim())
+        self.controller.notebook.tab(self.controller.notebook.index(self.controller.tabs['ARPSpoofFrame']),
+                                     state=DISABLED)
+        self.button_select_item.configure(text="Set as Victim(s)", command=lambda: self.set_victim())
         self.controller.output.update_status(self.controller.output.no_status, append=False)
 
     @staticmethod
@@ -337,7 +341,7 @@ class ARPSpoofFrame(Frame):
         self.button_ARP.pack(pady=10)
 
         self.button_reset_config = Button(self, text="Reset Configuration",
-                                          command=lambda: controller.show_frame("LocalNetworkScanFrame", update=True))
+                                          command=lambda: self.reset_config())
         self.button_reset_config.pack(pady=7)
 
         self.button_start_injecting_extracting = Button(self, text="Start Injecting and/or Extracting",
@@ -359,6 +363,14 @@ class ARPSpoofFrame(Frame):
         if self.controller.target is not None:
             self.entry_ip_target.delete(0, END)
             self.entry_ip_target.insert(0, self.controller.target)
+
+    def reset_config(self):
+        if self.controller.is_spoofing:
+            self.stop_spoofing()
+            self.controller.output.update_status("ARP Spoofing thread terminated", append=False)
+        self.controller.show_frame("LocalNetworkScanFrame", select=True, update=False)
+        self.controller.notebook.tab(self.controller.notebook.index(self.controller.tabs['ARPSpoofFrame']),
+                                     state=DISABLED)
 
     def start_spoofing(self, vIP, tIP):
         victims = [vic.strip() for vic in vIP.split(',')]
