@@ -1,0 +1,14 @@
+\subsection{Attack characteristics}
+The attack is highly stable and reliable, it involves no probabilistic aspects - e.g. requirements to win a race condition or the like. In case the environment fulfills all requirements, then the attack is almost guaranteed to work. This is due to the fact that almost all aspects of the attack uses tricks which are also used for legitimate reasons. Hence the environment inherently supports the attack. The only exception is the modification of the HTTP payload, the obvious counter measure is using HTTPS. But the transition from the web using HTTP to HTTPS only is still ongoing, and is far from finished.
+
+Getting into the right environment to deploy the attack will be the most challenging obstacle into employing the tool successfully. The following requirements apply:
+\begin{description}
+	\item[Position in the network] The attacker has to be able to achieve a MitM position in between, this could either mean that the attacker should be on the same network as the victim, or that it takes over some gateway or router which the victim uses.
+	\item[Insecure cookies] The cookie which the attacker wants to intercept may not have the secure flag set, since then the browser of the victim would not include this into insecure requests. Hence making it impossible to intercept it.
+	\item[HTTP traffic] The attacker needs insecure HTTP traffic in which the image tag can be injected.
+\end{description}
+
+\noindent The impact of the attack can be severe, since cookies can be extremely sensitive information like tokens of web sessions. Which, in case the web service is public, gives the attacker to take over the session and hence impersonate the victim. In practice would every online service onto which the victim logs on be an interesting target.
+
+\subsection{Defense mechanisms}
+It will be quite hard for most victims to detect or mitigate this attack, since it does not generate errors on both client and server side. The attack could either be detected by noticing the vast amount of ARP packets, although this is highly impractical for most users, since it is low level and hence requires technical knowledge in order to detect the attack. The other option is to detect the changes made to the HTTP requests, in order to make this work should the victim or server notice that either the request header or response body was tampered with. Although both are still completely legitimate according to the standards do they often contain newly introduced padding. Obviously is this not definitive proof that someone is tampering with the connection, but it does make a strong indicator.

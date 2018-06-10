@@ -1,0 +1,9 @@
+\texttt{fHTTP} manages to offer a fairly easy to use tool to pull of a quite powerful attack. Still is there a lot left to improve, which mainly fall into three categories:
+
+\begin{description}
+	\item[Required technical knowledge] The graphical interface and strict flow of the application was mostly aimed at making the tool also usable for users without too much technical knowledge on networking. The current application is full of technical terms, in most cases are they irrelevant since the default values will suffice. Replacing these technical terms or explaining their consequences would be a good addition into making the tool even more easy to use.
+	\item[Usability] Currently the tool only offers a method into obtaining cookies, but in most cases is this not extremely useful, since only rarely the cookie values itself are interesting. Thus the attacker would need to find a way to use this newly obtained information by itself. Hence a great addition would be a way to actually use this information, one way would be to directly load them into a browser, which would allow the attacker to use the session of the victim.
+	\item[Features] The current setup of the tool would allow for many more features to be added, for now we present a tool which is mostly the minimum viable product for the attack we wanted to present. But many more aspects of the tool could be extended. Some suggestions would be different methods into obtaining the MitM position, more filters to also find other sensitive data like for example passwords, or other attacks like SSL stripping or redirecting victims to different web sites.
+\end{description}
+
+To get in conclusion, the tool offers its users everything required to successfully pull of an attack, but has even more potential for growth. The fact that the code is released open source under the MIT license allows everyone, including ourselves, to improve, to reuse, and - most importantly - to learn.

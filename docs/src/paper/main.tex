@@ -1,0 +1,133 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Wenneker Article
+% LaTeX Template
+% Version 2.0 (28/2/17)
+%
+% This template was downloaded from:
+% http://www.LaTeXTemplates.com
+%
+% Authors:
+% Vel (vel@LaTeXTemplates.com)
+% Frits Wenneker
+%
+% License:
+% CC BY-NC-SA 3.0 (http://creativecommons.org/licenses/by-nc-sa/3.0/)
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%----------------------------------------------------------------------------------------
+%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+%----------------------------------------------------------------------------------------
+
+\documentclass[10pt, a4paper, twocolumn]{article} % 10pt font size (11 and 12 also possible), A4 paper (letterpaper for US letter) and two column layout (remove for one column)
+
+\input{structure.tex} % Specifies the document structure and loads requires packages
+
+\usepackage{hyperref} % Don't know why this has to go here, but in structure.tex does it not work for some reason
+
+\usepackage{subcaption}
+\usepackage{textcomp}
+
+%----------------------------------------------------------------------------------------
+%	ARTICLE INFORMATION
+%----------------------------------------------------------------------------------------
+
+\title{2IC80 Laboratory on Offensive Computer Security\\
+	\emph{Lab Project Assignment}} % The article title
+
+\author{
+	\authorstyle{Abdel K. Bokharouss\textsuperscript{1} and Adriaan Knapen\textsuperscript{1}} % Authors
+	\newline\newline % Space before institutions
+	\textsuperscript{1}\institution{Eindhoven University of Technology, The Netherlands}\\ % Institution 1
+}
+
+% Example of a one line author/institution relationship
+%\author{\newauthor{John Marston} \newinstitution{Universidad Nacional Autónoma de México, Mexico City, Mexico}}
+
+\date{\today} % Add a date here if you would like one to appear underneath the title block, use \today for the current date, leave empty for no date
+
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\maketitle % Print the title
+
+\thispagestyle{firstpage} % Apply the page style for the first page (no headers and footers)
+
+%----------------------------------------------------------------------------------------
+%	ABSTRACT
+%----------------------------------------------------------------------------------------
+
+\lettrineabstract{fHTTP is an application which has been developed in relation to the lab assignment of the course Laboratory on Offensive Computer Security as taught at Eindhoven University of Technology. The incentive behind fHTTP is to develop (and release) an application capable of a fully-fledged ARP spoofing tool. The spoofing capabilities can then be used for other attacks which target both the confidentiality and integrity of the users and/or systems on the same (local) network. That is, we provide our users to filter traffic on the network and we facilitate the option to inject malicious code into traffic which is read, manipulated and passed on.}
+
+In particular, we provide our users to read insecure cookies (which can be exploited for session-hijacking), to filter (unencrypted) traffic passing by based on self-specified regular-expressions and we provide our users the ability to inject code into the packets that pass by. The users can inject into an \texttt{img-}tag and the user can change the \text{accept-encoding} HTTP header to change (or disable) the content encoding algorithm. Lastly, \texttt{Nmap}-like functionality is incorporated into the application to provide the users the ability to scan the local network for potential targets. This is in relation to the \textit{main-objective} of this application: the application should be an easy-to-use tool usable in different scenarios and settings. We do not want to bother the users with continuous interaction with a command-line interface. The capabilities of the applications and a general idea of how to employ the application should be clear after one glance at \href{https://github.com/akbokha/fhttp}{\texttt{fHTTP}'s GitHub page}.
+
+% [max 200 words] 
+% Short intro describing
+% - the goal of the attack
+% - the impact of the attack
+% - goal of the tool (simple to use)
+
+%----------------------------------------------------------------------------------------
+%	ARTICLE CONTENTS
+%----------------------------------------------------------------------------------------
+
+\section{Description of the Attack}
+\label{sec:attack_desc}
+\input{attack_desc.tex}
+% [max 400 words]
+% Theoretical overview on the setup of the attack, describing
+% - achieving network position (MitM)
+% - packet/TCP/HTTP modification
+
+\section{Technical set-up}
+\label{sec:tech_set_up}
+\input{tech_set_up.tex}
+% [max 700 words]
+% - Used tools/dependencies
+% - Arp spoofing
+% - Network analysis
+% - accepted encoding headers
+% - img tag injection
+% - filtering of cookies
+
+\section{Attack Analysis}
+\label{sec:attack_analysis}
+\input{attack_analysis.tex}
+% [max 400 words]
+% Attack characteristics
+% - performance (f.e. success rate)
+% - environment limitations/requirements (f.e. what is required in order to achieve the MitM position)
+% - impact (what could be achieved with the attack)
+%
+% Defense mechanisms, what could a victim do to protect them self
+% - Detect the attack
+% - Mitigate the attack altogether
+
+\section{Attack Engineering}
+\label{sec:attack_engineering}
+\input{attack_engineering.tex}
+% [max 300 words]
+% how is the tool used, elaborate on a use case what can be achieved with the tool (mainly use screenshots?)
+
+\newpage
+\section{Discussion}
+\label{sec:discussion}
+\input{discussion.tex}
+% [max 500 words]
+% how could the attack be improved regarding the following aspects
+% - usability
+% - functionality
+% - environment limitations
+% - customizability
+% - robustness (f.e. ensure that the attack is working)
+
+%----------------------------------------------------------------------------------------
+%	BIBLIOGRAPHY
+%----------------------------------------------------------------------------------------
+
+\printbibliography[title={Bibliography}] % Print the bibliography, section title in curly brackets
+
+%----------------------------------------------------------------------------------------
+
+\end{document}
